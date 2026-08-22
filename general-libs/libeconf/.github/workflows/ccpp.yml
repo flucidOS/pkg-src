@@ -1,0 +1,17 @@
+name: C/C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake configure with ASAN and UBSAN checks
+      run: cmake -D BUILD_TESTS=ON -B build -DCMAKE_BUILD_TYPE=Sanitize
+    - name: make with ASAN and UBSAN checks
+      run: make -C build
+    - name: make check
+      run: CTEST_OUTPUT_ON_FAILURE=1 ASAN_OPTIONS=detect_leaks=0 make -C build check

@@ -1,0 +1,542 @@
+.TH "libeconf" 3 "Thu Apr 8 2021" "Version 0.8.4" "libeconf" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+include/libeconf.h \- Public API for the econf library\&.
+.br
+include/libeconf_ext.h \- Public extended API for the econf library\&.
+
+.SH DESCRIPTION
+.sp
+\fBlibeconf\fP is a highly flexible and configurable library to parse and
+manage key=value configuration files.
+.br
+It reads configuration file snippets from different directories and builds
+the final configuration file for the application from it.
+
+The first file is the vendor provided configuration file places in /usr/<vendordir>/<project>.
+Optionally, /run/<project> is also supported for ephemeral overrides.
+
+Defining <project> sub directory is optional.
+
+There are two methods of overriding this vendor settings: Copy the file from
+/usr/<vendordir>/<project> to /etc/<project> and modify the settings (see \fBExample 1\fP).
+
+Alternatively, a directory named <file>.<suffix>.d/ within /etc/<project> can be created,
+with drop-in files in the form <name>.<suffix> (see \fBExample 2\fP).
+
+These files contain only the changes of the specific settings the user is
+interested in.
+.br
+There can be several such drop-in files, they are processed in
+lexicographic order of their filename.
+
+The first method is useful to override the complete configuration file with an
+own one, the vendor supplied configuration is ignored.
+
+So, if /etc/<project>/<example>.<suffix> exists, /usr/<vendor>/<project>/<example>.<suffix>
+and /run/<project>/<example>.<suffix> will not be read.
+.br
+The disadvantage is, that changes of the vendor configuration file, due e.g.
+an package update, are ignored and the user has to manually merge them.
+
+The other method will continue to use /usr/<vendor>/<project>/<example>.<suffix> as base
+configuration file and merge all changes from /etc/<project>/<example>.<suffix>.d/*.<suffix>.
+.br
+So the user will automatically get improvements of the vendor, with the drawback,
+that they could be incompatible with the user made changes.
+.br
+If there is a file with the same name in /usr/<vendor>/<project>/<example>.<suffix>.d/ and
+in /etc/<project>/<example>.<suffix>.d/*.<suffix>., the file in /usr/<project>/<vendor>/<example>.<suffix>.d/
+will completely ignored.
+.br
+To disable a configuration file supplied by the vendor, the recommended way is to place
+a symlink to /dev/null in the configuration directory in /etc/<project>/, with the same filename
+as the vendor configuration file.
+
+Optionally, schemes with only drop-ins and without a ‘main’ configuration file will be supported too. In such
+schemes many drop-ins are loaded from a common directory in each hierarchy.
+For example, /usr/lib/<project>.d/*, /run/<project>.d/* and /etc/<project>.d/c.conf are all loaded and parsed
+in this scheme.
+
+.SS "Example 1"
+.sp
+If a /etc/<example>.<suffix> file exists:
+
+* /etc/<example>.<suffix>
+
+* /usr/<vendor>/<project>/<example>.<suffix>.d/*.<suffix>
+
+* /run/<project>/<example>.<suffix>.d/*.<suffix>
+
+* /etc/<project>/<example>.<suffix>.d/*.<suffix>
+
+.SS "Example 2"
+.sp
+The list of files and directories read if **no** /etc/<example>.<suffix> file
+exists:
+
+* /usr/<vendor>/<project>/<example>.<suffix> if no /run/<project>/<example>.<suffix> exist
+
+* /usr/<vendor>/<project>/<example>.<suffix>.d/*.<suffix>
+
+* /run/<project>/<example>.<suffix>.d/*.<suffix>
+
+* /etc/<project>/<example>.<suffix>.d/*.<suffix>
+
+.SS "UAPI Configuration Files Specification"
+.sp
+The libeconf library fulfills all requirements defined by the Linux Userspace API (UAPI) Group
+chapter "Configuration Files Specification".
+.br
+See: https://uapi-group.org/specifications/specs/configuration_files_specification/
+
+.SS Bindings
+.sp
+\fBPython\fP
+Documentation: \fI\%https://github.com/openSUSE/libeconf/blob/master/bindings/python3/docs/python\-libeconf.3\fP
+.sp
+\fBC#\fP
+Documentation: \fI\%https://github.com/openSUSE/libeconf/blob/master/bindings/csharp/docs/README.md\fP
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdbool\&.h>\fP
+.br
+\fC#include <stdint\&.h>\fP
+.br
+\fC#include <stdlib\&.h>\fP
+.br
+\fC#include 'libeconf\&.h'\fP
+.br
+\fC#include 'libeconf_ext\&.h'\fP
+.br
+
+.in -1c
+.SS "Typedefs"
+
+.in +1c
+.ti -1c
+.RI "typedef enum \fBeconf_err\fP \fBeconf_err\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBeconf_file\fP \fBeconf_file\fP"
+.br
+.ti -1c
+.RI "typedef struct \fBeconf_ext_value\fP \fBeconf_ext_value\fP"
+.br
+.in -1c
+.SS "Enumerations"
+
+.in +1c
+.ti -1c
+.RI "enum \fBeconf_err\fP { \fBECONF_SUCCESS\fP = 0, \fBECONF_ERROR\fP = 1, \fBECONF_NOMEM\fP = 2, \fBECONF_NOFILE\fP = 3, \fBECONF_NOGROUP\fP = 4, \fBECONF_NOKEY\fP = 5, \fBECONF_EMPTYKEY\fP = 6, \fBECONF_WRITEERROR\fP = 7, \fBECONF_PARSE_ERROR\fP = 8, \fBECONF_MISSING_BRACKET\fP = 9, \fBECONF_MISSING_DELIMITER\fP = 10, \fBECONF_EMPTY_SECTION_NAME\fP = 11, \fBECONF_TEXT_AFTER_SECTION\fP = 12, \fBECONF_FILE_LIST_IS_NULL\fP = 13, \fBECONF_WRONG_BOOLEAN_VALUE\fP = 14, \fBECONF_KEY_HAS_NULL_VALUE\fP = 15, \fBECONF_WRONG_OWNER\fP = 16, \fBECONF_WRONG_GROUP\fP = 17, \fBECONF_WRONG_FILE_PERMISSION\fP = 18, \fBECONF_WRONG_DIR_PERMISSION\fP = 19, \fBECONF_ERROR_FILE_IS_SYM_LINK\fP = 20, \fBECONF_PARSING_CALLBACK_FAILED\fP = 21, \fBECONF_ARGUMENT_IS_NULL_VALUE\fP = 22, \fBECONF_OPTION_NOT_FOUND\fP = 23, \fBECONF_VALUE_CONVERSION_ERROR\fP = 24 }"
+.br
+.RI "libeconf error codes "
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_readConfig\fP (\fBeconf_file\fP **key_file, const char *project, const char *usr_subdir, const char *config_name, const char *config_suffix, const char *delim, const char *comment)"
+.br
+.RI "Evaluating key/values of a given configuration by reading and merging all needed/available files in three different directories (normally in /usr/share, /run and /etc)\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_readConfigWithCallback\fP (\fBeconf_file\fP **key_file, const char *project, const char *usr_subdir, const char *config_name, const char *config_suffix, const char *delim, const char *comment, bool (*callback)(const char *filename, const void *data), const void *callback_data)"
+.br
+.RI "Has the same functionality like \fBeconf_readConfig\fP. The user can additionally define a callback in order e.g. to check all parsed file\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_readFile\fP (\fBeconf_file\fP **result, const char *file_name, const char *delim, const char *comment)"
+.br
+.RI "Process the file of the given file_name and save its contents into key_file object\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_readFileWithCallback\fP (\fBeconf_file\fP **result, const char *file_name, const char *delim, const char *comment, bool (*callback)(const char *filename, const void *data), const void *callback_data)"
+.br
+.RI "Has the same functionality like \fBeconf_readFile\fP. The user can additionally define a callback in order to check the parsed file\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_mergeFiles\fP (\fBeconf_file\fP **merged_file, \fBeconf_file\fP *usr_file, \fBeconf_file\fP *etc_file)"
+.br
+.RI "Merge the contents of two key_files objects\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_newKeyFile\fP (\fBeconf_file\fP **result, char delimiter, char comment)"
+.br
+.RI "Create a new econf_file object\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_newIniFile\fP (\fBeconf_file\fP **result)"
+.br
+.RI "Create a new econf_file object in IniFile format\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_writeFile\fP (\fBeconf_file\fP *key_file, const char *save_to_dir, const char *file_name)"
+.br
+.RI "Write content of an econf_file struct to specified location\&. "
+.ti -1c
+.RI "char * \fBeconf_getPath\fP (\fBeconf_file\fP *kf)"
+.br
+.RI "Evaluating path name of the regarding configuration file\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getGroups\fP (\fBeconf_file\fP *kf, size_t *length, char ***groups)"
+.br
+.RI "Evaluating all group entries\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getKeys\fP (\fBeconf_file\fP *kf, const char *group, size_t *length, char ***keys)"
+.br
+.RI "Evaluating all keys\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getIntValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int32_t *result)"
+.br
+.RI "Evaluating int32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getInt64Value\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int64_t *result)"
+.br
+.RI "Evaluating int64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getUIntValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint32_t *result)"
+.br
+.RI "Evaluating uint32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getUInt64Value\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint64_t *result)"
+.br
+.RI "Evaluating uint64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getFloatValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, float *result)"
+.br
+.RI "Evaluating float value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getDoubleValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, double *result)"
+.br
+.RI "Evaluating double value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getStringValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, char **result)"
+.br
+.RI "Evaluating string value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getBoolValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, bool *result)"
+.br
+.RI "Evaluating bool value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getIntValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int32_t *result, const int32_t def)"
+.br
+.RI "Evaluating int32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getInt64ValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int64_t *result, const int64_t def)"
+.br
+.RI "Evaluating int64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getUIntValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint32_t *result, const uint32_t def)"
+.br
+.RI "Evaluating uint32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getUInt64ValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint64_t *result, const uint64_t def)"
+.br
+.RI "Evaluating uint64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getFloatValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, float *result, const float def)"
+.br
+.RI "Evaluating float value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getDoubleValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, double *result, const double def)"
+.br
+.RI "Evaluating double value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getStringValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, char **result, const char *def)"
+.br
+.RI "Evaluating string value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_getBoolValueDef\fP (\fBeconf_file\fP *kf, const char *group, const char *key, bool *result, const bool def)"
+.br
+.RI "Evaluating bool value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setIntValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int32_t value)"
+.br
+.RI "Set int32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setInt64Value\fP (\fBeconf_file\fP *kf, const char *group, const char *key, int64_t value)"
+.br
+.RI "Set int64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setUIntValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint32_t value)"
+.br
+.RI "Set uint32 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setUInt64Value\fP (\fBeconf_file\fP *kf, const char *group, const char *key, uint64_t value)"
+.br
+.RI "Set uint64 value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setFloatValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, float value)"
+.br
+.RI "Set float value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setDoubleValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, double value)"
+.br
+.RI "Set double value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setStringValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, const char *value)"
+.br
+.RI "Set string value for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setBoolValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, const char *value)"
+.br
+.RI "Set bool value for given group/key\&. "
+.ti -1c
+.RI "const char * \fBeconf_errString\fP (const \fBeconf_err\fP error)"
+.br
+.RI "Convert an econf_err type to a string\&. "
+.ti -1c
+.RI "void \fBeconf_errLocation\fP (char **filename, uint64_t *line_nr)"
+.br
+.RI "Info about where the error has happened\&. "
+.ti -1c
+.RI "void \fBeconf_freeArray\fP (char **array)"
+.br
+.RI "Free an array of type char** created by \fBeconf_getGroups()\fP or \fBeconf_getKeys()\fP\&."
+.ti -1c
+.RI "void \fBeconf_freeArrayp\fP (char ***array)"
+.br
+.RI "Free an array of type char*** by using e.g. __attribute__ in the declaration\&."
+.ti -1c
+.RI "void \fBeconf_freeFile\fP (\fBeconf_file\fP **key_file)"
+.br
+.RI "Free memory allocated by e\&.g\&. \fBeconf_readConfig\fP\&."
+.ti -1c
+RI "void \fBeconf_freeFilep\fP (\fBeconf_file\fP *key_file)"
+.br
+.RI "Free memory allocated by e\&.g\&. \fBeconf_readConfig\fP by using __attribute__ in the declaration\&."
+.ti -1c
+.RI "char \fBeconf_comment_tag\fP (\fBeconf_file\fP *key_file)"
+.br
+.RI "Returns the comment character tag of the given econf_file object\&. "
+.ti -1c
+.RI "char \fBeconf_delimiter_tag\fP (\fBeconf_file\fP *key_file)"
+.br
+.RI "Returns the delimiter character of the given econf_file object\&. "
+.ti -1c
+.RI "void \fBeconf_set_comment_tag\fP (\fBeconf_file\fP *key_file, const char comment)"
+.br
+.RI "Set the comment character tag of the given econf_file object\&. "
+.ti -1c
+.RI "void \fBeconf_set_delimiter_tag\fP (\fBeconf_file\fP *key_file, const char delimiter)"
+.br
+.RI "Set the delimiter character of the given econf_file object\&. "
+.in -1c
+.RI "\fBeconf_err\fP \fBeconf_getExtValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, \fBeconf_ext_value\fP **result)"
+.in +1c
+.RI "Evaluating more information for given group/key\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_setExtValue\fP (\fBeconf_file\fP *kf, const char *group, const char *key, \fBeconf_ext_value\fP *value)"
+.br
+.RI "Setting more information (e.g. comments) for given group/key\&. "
+.ti -1c
+.RI "void \fBeconf_freeExtValue\fP (\fBeconf_ext_value\fP *to_free)"
+.br
+.RI "Free an complete \fBeconf_ext_value\fP struct\&. "
+.ti -1c
+.RI "\fBeconf_err\fP \fBeconf_set_conf_dirs\fP (const char **dir_postfix_list)"
+.br
+.RI "Set a list of directory structures (with order) which describes the directories in which the files have to be parsed\&. "
+.in -1c
+.br
+.SH "Detailed Description"
+.PP 
+Public API for the econf library\&. 
+
+
+.PP
+Definition in file \fBlibeconf\&.h\fP\& and \fBlibeconf_ext\&.h\fP\&.
+
+.SH "Typedef Documentation"
+.PP
+.SS "typedef struct \fBeconf_file\fP \fBeconf_file\fP"
+
+.PP
+Container which includes all information about the configuration file(s)\&.
+.SS "typedef struct \fBeconf_ext_value\fP \fBeconf_ext_value\fP"
+
+.PP
+.in +1c
+.ti -1c
+.RI "char ** \fBvalues\fP"
+.br
+.RI "Values of a given key in form of an string array\&. "
+.ti -1c
+.RI "char * \fBfile\fP"
+.br
+.RI "Path of the configuration file where this value has been read\&. "
+.ti -1c
+.RI "uint64_t \fBline_number\fP"
+.br
+.RI "Line number of the configuration key/value\&. "
+.ti -1c
+.RI "char * \fBcomment_before_key\fP"
+.br
+.RI "Comment before the key/value entry\&. "
+.ti -1c
+.RI "char * \fBcomment_after_value\fP"
+.br
+.RI "Comment after the value entry\&. "
+.in -1c
+
+
+.SH "Enumeration Type Documentation"
+.PP 
+.SS "enum \fBeconf_err\fP"
+
+.PP
+libeconf error codes 
+.PP
+\fBEnumerator\fP
+.in +1c
+.TP
+\fB\fIECONF_SUCCESS \fP\fP
+General purpose success code\&. 
+.TP
+\fB\fIECONF_ERROR \fP\fP
+Generic Error\&. 
+.TP
+\fB\fIECONF_NOMEM \fP\fP
+Out of memory\&. 
+.TP
+\fB\fIECONF_NOFILE \fP\fP
+Config file not found\&. 
+.TP
+\fB\fIECONF_NOGROUP \fP\fP
+Group not found\&. 
+.TP
+\fB\fIECONF_NOKEY \fP\fP
+Key not found\&. 
+.TP
+\fB\fIECONF_EMPTYKEY \fP\fP
+Key has empty value\&. 
+.TP
+\fB\fIECONF_WRITEERROR \fP\fP
+Error creating or writing to a file\&. 
+.TP
+\fB\fIECONF_PARSE_ERROR \fP\fP
+General syntax error in input file\&. 
+.TP
+\fB\fIECONF_MISSING_BRACKET \fP\fP
+Missing closing section bracket\&. 
+.TP
+\fB\fIECONF_MISSING_DELIMITER \fP\fP
+Missing delimiter\&. 
+.TP
+\fB\fIECONF_EMPTY_SECTION_NAME \fP\fP
+Empty section name\&. 
+.TP
+\fB\fIECONF_TEXT_AFTER_SECTION \fP\fP
+Text after section\&.
+.TP
+\fB\fIECONF_FILE_LIST_IS_NULL \fP\fP
+Parsed file list is NULL\&.
+.TP
+\fB\fIECONF_WRONG_BOOLEAN_VALUE \fP\fP
+Wrong boolean value (1/0 true/false yes/no)
+.TP
+\fB\fIECONF_KEY_HAS_NULL_VALUE \fP\fP
+Given key has NULL value\&.
+.TP
+\fB\fIECONF_WRONG_OWNER \fP\fP
+File has wrong owner\&.
+.TP
+\fB\fIECONF_WRONG_GROUP \fP\fP
+File has wrong group\&.
+.TP
+\fB\fIECONF_WRONG_FILE_PERMISSION \fP\fP
+File has wrong file permissions\&.
+.TP
+\fB\fIECONF_WRONG_DIR_PERMISSION \fP\fP
+File has wrong dir permissions\&.
+.TP
+\fB\fIECONF_ERROR_FILE_IS_SYM_LINK \fP\fP
+File is a sym link which is not permitted\&.
+.TP
+\fB\fIECONF_PARSING_CALLBACK_FAILED \fP\fP
+User defined parsing callback has failed\&.
+.TP
+\fB\fIECONF_ARGUMENT_IS_NULL_VALUE \fP\fP
+Given argument is NULL\&.
+.TP
+\fB\fIECONF_OPTION_NOT_FOUND \fP\fP
+Given option not found\&.
+.TP
+\fB\fIECONF_VALUE_CONVERSION_ERROR \fP\fP
+Value cannot be converted\&.
+.PP
+
+.SH "SEE ALSO"
+.PP
+\fBRead/Write configuration files:\fR
+.PP
+econf_readConfig(3),
+econf_readConfigWithCallback(3),
+econf_readFile(3),
+econf_readFileWithCallback(3),
+econf_mergeFiles(3),
+econf_writeFile(3)
+
+.PP
+\fBget/set key/value:\fR
+.PP
+econf_getKeys(3),
+econf_getGroups(3)
+.PP
+econf_getBoolValue(3),
+econf_getBoolValueDef(3),
+econf_getDoubleValue(3),
+econf_getDoubleValueDef(3),
+econf_getExtValue(3),
+econf_getFloatValue(3),
+econf_getFloatValueDef(3),
+econf_getInt64Value(3),
+econf_getInt64ValueDef(3),
+econf_getIntValue(3),
+econf_getIntValueDef(3),
+econf_getPath(3),
+econf_getStringValue(3),
+econf_getStringValueDef(3),
+econf_getUInt64Value(3),
+econf_getUInt64ValueDef(3),
+econf_getUIntValue(3),
+econf_getUIntValueDef(3)
+.PP
+econf_setBoolValue(3)
+econf_setDoubleValue(3),
+econf_setExtValue(3),
+econf_setFloatValue(3),
+econf_setInt64Value(3),
+econf_setIntValue(3),
+econf_setStringValue(3),
+econf_setUInt64Value(3)
+
+.PP
+\fBInitialization:\fR
+.PP
+econf_newIniFile(3),
+econf_newKeyFile(3)
+
+.PP
+\fBFreeing:\fR
+.PP
+econf_freeArray(3),
+econf_freeExtValue(3),
+econf_freeFile(3)
+
+.PP
+\fBGeneral setup:\fR
+.PP
+econf_comment_tag(3),
+econf_set_comment_tag(3),
+econf_delimiter_tag(3),
+econf_set_delimiter_tag(3),
+econf_set_conf_dirs(3)
+
+.PP
+\fBError handling:\fR
+.PP
+econf_errLocation(3),
+econf_errString(3)
+
+.PP
+\fBTools\fR:
+.PP
+econftool(3)\&
