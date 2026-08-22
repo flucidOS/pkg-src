@@ -1,0 +1,116 @@
+#! /bin/sh
+# Copyright (C) 2011-2025 Free Software Foundation, Inc.
+#
+# GDBM is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# GDBM is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GDBM. If not, see <http://www.gnu.org/licenses/>. */
+
+force=
+get_po_only=
+no_po=
+
+refdir=po/.reference
+
+usage() {
+    cat <<EOF
+Usage: $0 [--force] [--no-po]
+   or: $0 --get-po
+Bootstraps the GNU dbm project from git repository and/or updates translation
+files.
+
+Options are:
+
+  --force     force bootstrapping overriding the safety checks
+  --no-po     don't download translation files
+  --get-po    only update translation files, don't bootstrap
+
+See README-hacking for details.
+EOF
+}
+
+get_po() {
+  test -d $refdir || mkdir $refdir
+  # Get PO files.
+  rsync --delete -Lrtvz translationproject.org::tp/latest/gdbm/ $refdir
+  langs=`cd $refdir && ls *.po | sed 's/\.po$//' | sort`
+  if test "$langs" != '*'; then
+    for lang in $langs
+    do
+      if test -f po/$lang.po && cmp po/$lang.po $refdir/$lang.po >/dev/null
+      then
+        :
+      else
+        cp $refdir/$lang.po po
+      fi
+    done
+  fi
+  # Create LINGUAS
+  (echo "# This file is generated automatically; don't edit"
+   ls po/*.po 2>/dev/null | sed 's^.*/^^;s/\.po$//' | sort) > po/LINGUAS
+}  
+
+################
+
+while [ $# -gt 0 ]
+do
+    case $1 in
+	--force)
+	    force=1
+	    ;;
+
+	--get-po)
+	    get_po_only=1
+	    ;;
+
+	--no-po)
+	    no_po=1
+	    ;;
+	
+	--help|-h)
+	    usage
+	    exit 0
+	    ;;
+
+	*) echo >&2 "$0: unrecognized argument"
+	   usage >&2
+	   exit 1
+    esac
+    shift
+done
+
+if [ -n "$get_po_only" ]; then
+    if [ -n "$force$no_po" ]; then
+	echo >&2 "$0: conflicting arguments"
+	usage >&2
+	exit 1
+    fi
+    get_po
+else
+    if ! test -f README-hacking && test -z "$force"; then
+	echo >&2 "$0: bootstrapping from a non-checked-out distribution is risky"
+	echo >&2 "$0: use --force if you really want it"
+	exit 1
+    fi
+
+    if [ -z "$no_po" ]; then
+	get_po
+    fi
+    
+    test -d m4 || mkdir m4
+    if [ -f ChangeLog ]; then
+	cat > ChangeLog <<EOF
+# This file is a placeholder.  Run make to generate actual ChangeLog.
+EOF
+    fi
+
+    autoreconf -f -i -s
+fi
