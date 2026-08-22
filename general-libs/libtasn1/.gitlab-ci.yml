@@ -1,0 +1,504 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: normal
+  BUILD_IMAGES_PROJECT: gnutls/build-images
+  FEDORA_BUILD: buildenv-fedora33
+  GET_SOURCES_ATTEMPTS: "3"
+
+.test:
+  artifacts:
+    expire_in: 2 weeks
+    when: always
+    paths:
+    - "*.tar.gz"
+    - ./*.log
+    - ./config.h
+    - ./**/*.log
+
+# See http://doc.gitlab.com/ce/ci/yaml/ for documentation.
+x86-64:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  stage: build
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - ./configure --disable-doc && make -j$(nproc)
+  - make syntax-check
+  - make -j$(nproc) check
+  - make dist
+  except:
+  - tags
+  tags:
+  - shared
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - libtasn1-*.tar.gz
+      - ./*.log
+      - ./tests/*.log
+  artifacts:
+    expire_in: 1 week
+    when: on_success
+    paths:
+      - libtasn1-*.tar.gz
+
+Debian10-bootstrap:
+  image: debian:10-slim
+  stage: build
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make git autoconf automake libtool bison texinfo texlive texlive-generic-recommended texlive-extra-utils help2man gtk-doc-tools valgrind abigail-tools
+  script:
+  - ./bootstrap
+  - mkdir b
+  - cd b
+  - ../configure --enable-gcc-warnings
+  - make -j$(nproc)
+  - make -j$(nproc) check
+  - make abi-check
+  - make syntax-check distcheck
+  artifacts:
+    expire_in: 2 weeks
+    when: on_success
+    paths:
+      - b/libtasn1-*.tar.gz
+
+Debian11-bootstrap:
+  image: debian:11-slim
+  stage: build
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make git autoconf automake libtool bison texinfo help2man gtk-doc-tools valgrind abigail-tools indent
+  script:
+  - ./bootstrap
+  - ./configure --enable-gcc-warnings
+  - make -j$(nproc)
+  - make -j$(nproc) check
+  - make abi-check
+  - make syntax-check dist
+  artifacts:
+    expire_in: 2 weeks
+    when: on_success
+    paths:
+      - libtasn1-*.tar.gz
+
+Debian-testing-bootstrap:
+  image: debian:testing-slim
+  stage: build
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make git autoconf automake libtool bison texinfo help2man gtk-doc-tools valgrind abigail-tools indent
+  script:
+  - ./bootstrap
+  - ./configure --enable-gcc-warnings
+  - make -j$(nproc)
+  - make -j$(nproc) check
+  - make syntax-check distcheck
+  artifacts:
+    expire_in: 2 weeks
+    when: on_success
+    paths:
+      - libtasn1-*.tar.gz
+
+valgrind/werror:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - CFLAGS="-O2 -g -Werror" ./configure --disable-doc --enable-valgrind-tests && make -j$(nproc)
+  - make -j$(nproc) check
+  except:
+  - tags
+  tags:
+  - shared
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - ./*.log
+      - ./tests/*.log
+
+clang:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - CC=clang ./configure --disable-doc --disable-valgrind-tests && make -j$(nproc)
+  - make check -j$(nproc)
+  except:
+  - tags
+  tags:
+  - shared
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - ./*.log
+      - ./tests/*.log
+
+asan:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - CFLAGS="-fsanitize=address -g -O2" LDFLAGS="-static-libasan" ./configure --disable-doc --disable-valgrind-tests && make -j$(nproc) && make check -j$(nproc)
+  except:
+  - tags
+  tags:
+  - shared
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - ./*.log
+      - ./tests/*.log
+
+ubsan:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - CFLAGS="-fsanitize=undefined -fno-sanitize-recover -g -O2" ./configure --disable-doc --disable-valgrind-tests && make -j$(nproc) && make check -j$(nproc)
+  tags:
+  - shared
+  except:
+  - tags
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - ./*.log
+      - ./tests/*.log
+
+MinGW32-bootstrap:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - dnf install -y wine.i686 mingw32-gcc util-linux
+  - dnf remove -y mingw32-libtasn1
+  - mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
+  - echo ':DOSWin:M::MZ::/usr/bin/wine:' > /proc/sys/fs/binfmt_misc/register
+  - ./bootstrap && rm -f tests/suite/mini-eagain2.c && mkdir -p build && cd build &&
+    mingw32-configure --disable-doc --disable-valgrind-tests &&
+    mingw32-make -j$(nproc) && mingw32-make -C tests check -j$(nproc)
+  tags:
+  - shared
+  - docker
+  except:
+  - tags
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - build/*.log
+      - build/tests/*.log
+      - build/tests/*/*.log
+
+gnutls:
+  when: manual # takes ~1 hour...
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - yum remove -y libtasn1-devel
+  - ./bootstrap
+  - ./configure --disable-doc --prefix=/usr --libdir=/usr/lib64 &&
+    make -j$(nproc) && make install
+  - git clone --depth 1 --branch master https://gitlab.com/gnutls/gnutls.git gnutls-git
+  - cd gnutls-git && git submodule update --init && ./bootstrap &&
+    ./configure --disable-cxx --disable-guile --disable-doc && make -j$(nproc) &&
+    make -j $(nproc) check
+  tags:
+  - shared
+  except:
+  - tags
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - gnutls-git/guile/tests/*.log
+      - gnutls-git/tests/*.log
+      - gnutls-git/*.log
+      - gnutls-git/tests/*/*.log
+      - gnutls-git/tests/suite/*/*.log
+
+static-analyzers:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - ./bootstrap
+  - scan-build ./configure --disable-doc
+  - make -j$(nproc) syntax-check
+  - make -j$(nproc) -C lib/gl
+  - make -j$(nproc) -C lib ASN1.lo
+  - scan-build --status-bugs -o scan-build-lib make -j$(nproc) -C lib
+  tags:
+  - shared
+  except:
+  - tags
+  artifacts:
+    expire_in: 1 week
+    when: on_failure
+    paths:
+      - scan-build-lib/
+
+armcross:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -q make gcc-arm-linux-gnueabi qemu-user qemu-user-binfmt file
+  - update-binfmts --enable qemu-arm
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - mkdir b
+  - cd b
+  - ../configure --host=arm-linux-gnueabi --enable-gcc-warnings CFLAGS="-static --static"
+  - make V=1
+  - arm-linux-gnueabi-readelf -h lib/.libs/libtasn1.a
+  - arm-linux-gnueabi-readelf -h src/asn1Parser
+  - file src/asn1Parser
+  - LANG=C.UTF-8 qemu-arm src/asn1Parser -c ../tests/pkix.asn
+  - make check
+
+Mingw32:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - dpkg --add-architecture i386
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make mingw-w64 wine wine32 libwine libwine:i386 binfmt-support wine-binfmt
+  - update-binfmts --enable wine
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --host=i686-w64-mingw32 CC='i686-w64-mingw32-gcc -static-libgcc' --enable-gcc-warnings
+  - make check V=1
+
+Mingw64:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make mingw-w64 wine wine64 binfmt-support wine-binfmt
+  - update-binfmts --enable wine
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure  --host=x86_64-w64-mingw32 --enable-gcc-warnings
+  - make check V=1
+
+Alpine:
+  extends: .test
+  image: alpine:latest
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - echo "ipv6" >> /etc/modules
+  - apk update
+  - apk add build-base
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - sed -i 's/UNKNOWN/10.11.12/g' tests/version.c # XXX FIXME alpine bug?
+  - make check V=1
+
+ArchLinux:
+  extends: .test
+  image: archlinux:latest
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - pacman -Sy --noconfirm make gcc diffutils
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make check V=1
+
+CentOS7-distcheck:
+  extends: .test
+  image: centos:7
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - yum -y install make gcc diffutils valgrind gtk-doc texinfo
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1 TEXI2DVI=true
+
+AlmaLinux8-c89:
+  extends: .test
+  image: almalinux:8
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - yum -y install make gcc diffutils
+  script:
+  - tar xfz libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings ac_cv_prog_cc_c11=-std=c89
+  - make check V=1 VERBOSE=t WERROR_CFLAGS='-Dinline= -Werror -Wno-error=unused-function -Wno-error=nested-externs -Wno-error=implicit-function-declaration'
+
+Debian4:
+  extends: .test
+  image: debian/eol:etch
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc libc-dev
+  - dpkg -l | cat
+  script:
+  - tar xfz libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make check V=1 VERBOSE=t
+
+Debian8-distcheck:
+  extends: .test
+  image: debian/eol:jessie
+  stage: test
+  needs: [x86-64]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc gtk-doc-tools texinfo
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1 TEXI2DVI=true
+
+Debian9-distcheck:
+  extends: .test
+  image: debian:9-slim
+  stage: test
+  needs: [x86-64]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc gtk-doc-tools texinfo texlive texlive-generic-recommended texlive-extra-utils
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1
+
+Debian11-distcheck:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc gtk-doc-tools texinfo
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1
+
+Ubuntu-latest-distcheck:
+  extends: .test
+  image: ubuntu:latest
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc gtk-doc-tools texinfo
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1
+
+Ubuntu-rolling-distcheck:
+  extends: .test
+  image: ubuntu:rolling
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make gcc gtk-doc-tools texinfo
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure --enable-gcc-warnings
+  - make distcheck V=1
+
+tcc-lld:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make tcc binutils lld
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure CC=tcc LD=lld --disable-shared
+  - make check V=1 VERBOSE=t
+
+pcc:
+  extends: .test
+  image: debian:11-slim
+  stage: test
+  needs: [Debian11-bootstrap]
+  before_script:
+  - apt-get update -qq
+  - env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq make pcc binutils libc6-dev libtasn1-bin
+  script:
+  - tar xfa libtasn1-*.tar.gz
+  - cd `ls -d libtasn1-* | grep -v tar.gz`
+  - ./configure CC=pcc
+  - make V=1 VERBOSE=t -C lib
+  - make V=1 VERBOSE=t -C fuzz check
+  - sed -i 's/exit 1/exit 77/' tests/parser.sh
+  - sed -i 's/diff/diff -u/' tests/parser.sh
+  - ln -s /usr/bin/asn1Parser src/
+  - ln -s /usr/bin/asn1Decoding src/
+  - ln -s /usr/bin/asn1Coding src/
+  - make V=1 VERBOSE=t -C tests check
+
+.pages:
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  script:
+  - dnf install -y dblatex
+  - ./bootstrap
+  - CFLAGS="-g -Og" dash ./configure --enable-code-coverage --enable-gtk-doc --enable-gtk-doc-pdf --disable-gcc-warnings
+  - mkdir -p public
+  - make -j$(nproc)
+  - make -j$(nproc) check
+  - make local-code-coverage-output || true
+  - make -C doc libtasn1.html libtasn1.pdf
+  - mv doc/libtasn1.pdf doc/libtasn1.html public/
+  - cp -ar GNU*-coverage/ public/coverage
+  - cp public/libtasn1.html public/index.html
+  - rm -rf public/reference
+  - mv doc/reference/html public/reference
+  - mv doc/reference/libtasn1.pdf public/reference/
+  - make web-manual
+  - rm -rf public/manual
+  - mv doc/manual public/manual
+  tags:
+  - shared
+  artifacts:
+    when: on_success
+    paths:
+      - public
+
+pages:
+  extends: .pages
+  only:
+    - master
+
+pages-test:
+  extends: .pages
+  except:
+    - master
