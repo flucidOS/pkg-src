@@ -1,0 +1,100 @@
+(define-property flags
+  (of-object "GBinding")
+  (prop-type "GParamFlags")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+  (default-value "G_BINDING_DEFAULT")
+)
+
+(define-property source
+  (of-object "GBinding")
+  (prop-type "GParamObject")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+)
+
+(define-property source-property
+  (of-object "GBinding")
+  (prop-type "GParamString")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+  (default-value "")
+)
+
+(define-property target
+  (of-object "GBinding")
+  (prop-type "GParamObject")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+)
+
+(define-property target-property
+  (of-object "GBinding")
+  (prop-type "GParamString")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+  (default-value "")
+)
+
+(define-property source
+  (of-object "GBindingGroup")
+  (prop-type "GParamObject")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #f)
+)
+
+(define-signal notify
+  (of-object "GObject")
+  (return-type "void")
+  (flags "Run First, Action, No Hooks, No Recurse")
+  (detailed #t)
+  (parameters
+    '("GParam*" "pspec")
+  )
+)
+
+(define-property target
+  (of-object "GSignalGroup")
+  (prop-type "GParamObject")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #f)
+)
+
+(define-property target-type
+  (of-object "GSignalGroup")
+  (prop-type "GParamGType")
+  (docs "")
+  (readable #t)
+  (writable #t)
+  (construct-only #t)
+)
+
+(define-signal bind
+  (of-object "GSignalGroup")
+  (return-type "void")
+  (flags "Run Last")
+  (parameters
+    '("GObject*" "instance")
+  )
+)
+
+(define-signal unbind
+  (of-object "GSignalGroup")
+  (return-type "void")
+  (flags "Run Last")
+)
+

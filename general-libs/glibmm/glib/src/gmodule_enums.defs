@@ -1,0 +1,26 @@
+;; Namespace GModule
+
+;; Enums
+
+(define-enum-extended ModuleError
+  (in-module "GModule")
+  (c-name "GModuleError")
+  (values
+    '("failed" "G_MODULE_ERROR_FAILED" "0")
+    '("check-failed" "G_MODULE_ERROR_CHECK_FAILED" "1")
+  )
+)
+
+
+;; Flags
+
+(define-flags-extended ModuleFlags
+  (in-module "GModule")
+  (c-name "GModuleFlags")
+  (values
+    '("lazy" "G_MODULE_BIND_LAZY" "1 << 0")
+    '("local" "G_MODULE_BIND_LOCAL" "1 << 1")
+    '("mask" "G_MODULE_BIND_MASK" "0x3")
+  )
+)
+
