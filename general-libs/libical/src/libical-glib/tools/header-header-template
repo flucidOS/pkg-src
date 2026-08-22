@@ -1,0 +1,20 @@
+/* Generated file (by generator) */
+
+/*
+ * SPDX-FileCopyrightText: 2015 William Yu <williamyu@gnome.org>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
+ */
+
+#ifndef LIBICAL_GLIB_H
+#define LIBICAL_GLIB_H
+
+#include <glib-object.h>
+
+#define __LIBICAL_GLIB_H_INSIDE__
+
+#include <libical-glib/i-cal-forward-declarations.h>
+${allHeaders}
+#undef __LIBICAL_GLIB_H_INSIDE__
+
+#endif /* LIBICAL_GLIB_H */

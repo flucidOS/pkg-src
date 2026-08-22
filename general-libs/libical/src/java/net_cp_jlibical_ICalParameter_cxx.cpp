@@ -1,0 +1,269 @@
+/*======================================================================
+ FILE: net_cp_jlibical_ICalParameter_cxx.cpp
+ CREATOR: gnorman 1/10/02
+ SPDX-FileCopyrightText: 2002, Critical Path
+
+ SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
+
+======================================================================*/
+
+#ifndef NET_CP_JLIBICAL_ICALPARAMETER_CXX_H
+#include "net_cp_jlibical_ICalParameter_cxx.hpp"
+#endif
+
+#ifndef JLIBICAL_CONSTS_CXX_H
+#include "jlibical_consts_cxx.hpp"
+#endif
+
+#ifndef JLIBICAL_UTILS_CXX_H
+#include "jlibical_utils_cxx.hpp"
+#endif
+
+#ifndef ICALPARAMETER_CXX_H
+#include "icalparameter_cxx.hpp"
+#endif
+
+using namespace LibICal;
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    as_ical_string
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_net_cp_jlibical_ICalParameter_as_1ical_1string(JNIEnv *env, jobject jobj)
+{
+    jstring result = NULL;
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        auto icalStr = cObj->as_ical_string();
+        result = env->NewStringUTF(icalStr.empty() ? "" : icalStr.c_str());
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    isa
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_cp_jlibical_ICalParameter_isa(JNIEnv *env, jobject jobj)
+{
+    jint result = 0;
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        result = cObj->isa();
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    isa_parameter
+ * Signature: (Ljava/lang/Object;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_net_cp_jlibical_ICalParameter_isa_1parameter(JNIEnv *env, jobject jobj, jobject arg)
+{
+    jboolean result = 0;
+
+    // get the c++ object from the jobj
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+    if (cObj != NULL) {
+        // get the c++ object from the arg
+        void *argObjPtr = 0;
+
+        if (arg != NULL) {
+            argObjPtr = (void *)getCObjectPtr(env, arg);
+        }
+
+        // get the result from the c++ object (candidateValue can be 0, it's cObj's responsibility to handle this if an error).
+        result = (jboolean)cObj->isa_parameter(argObjPtr);
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    get_language
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_net_cp_jlibical_ICalParameter_get_1language(JNIEnv *env, jobject jobj)
+{
+    jstring result = NULL;
+    const ICalParameter *cObj = getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        auto icalStr = cObj->get_language();
+        result = env->NewStringUTF(icalStr.empty() ? "" : icalStr.c_str());
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    set_language
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_set_1language(JNIEnv *env, jobject jobj, jstring str)
+{
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        const char *szTemp = env->GetStringUTFChars(str, NULL);
+
+        cObj->set_language((char *)szTemp);
+        env->ReleaseStringUTFChars(str, szTemp);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    get_encoding
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_cp_jlibical_ICalParameter_get_1encoding(JNIEnv *env, jobject jobj)
+{
+    jint result = 0;
+    const ICalParameter *cObj = getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        result = cObj->get_encoding();
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    set_encoding
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_set_1encoding(JNIEnv *env, jobject jobj, jint value)
+{
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        cObj->set_encoding((icalparameter_encoding)value);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    get_role
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_cp_jlibical_ICalParameter_get_1role(JNIEnv *env, jobject jobj)
+{
+    jint result = 0;
+    const ICalParameter *cObj = getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        result = cObj->get_role();
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    set_role
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_set_1role(JNIEnv *env, jobject jobj, jint value)
+{
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        cObj->set_role((icalparameter_role)value);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    get_partstat
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_net_cp_jlibical_ICalParameter_get_1partstat(JNIEnv *env, jobject jobj)
+{
+    jint result = 0;
+    const ICalParameter *cObj = getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        result = cObj->get_partstat();
+    }
+
+    return (result);
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    set_partstat
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_set_1partstat(JNIEnv *env, jobject jobj, jint value)
+{
+    ICalParameter *cObj = (ICalParameter *)getSubjectAsICalParameter(env, jobj, JLIBICAL_ERR_CLIENT_INTERNAL);
+
+    if (cObj != NULL) {
+        cObj->set_partstat((icalparameter_partstat)value);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    init
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_init__(JNIEnv *env, jobject jobj)
+{
+    setCObjectPtr(env, jobj, new ICalParameter());
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    init
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_init__Ljava_lang_String_2(JNIEnv *env, jobject jobj, jstring str)
+{
+    if (str != NULL) {
+        const char *szTemp = env->GetStringUTFChars(str, NULL);
+
+        setCObjectPtr(env, jobj, new ICalParameter((char *)szTemp));
+        env->ReleaseStringUTFChars(str, szTemp);
+    } else {
+        throwException(env, JLIBICAL_ERR_ILLEGAL_ARGUMENT);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    init
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_init__ILjava_lang_String_2(JNIEnv *env, jobject jobj, jint kind, jstring str)
+{
+    if (str != NULL) {
+        const char *szTemp = env->GetStringUTFChars(str, NULL);
+
+        setCObjectPtr(env, jobj, new ICalParameter((icalparameter_kind)kind, (char *)szTemp));
+        env->ReleaseStringUTFChars(str, szTemp);
+    } else {
+        throwException(env, JLIBICAL_ERR_ILLEGAL_ARGUMENT);
+    }
+}
+
+/*
+ * Class:     net_cp_jlibical_ICalParameter
+ * Method:    init
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_net_cp_jlibical_ICalParameter_init__I(JNIEnv *env, jobject jobj, jint kind)
+{
+    setCObjectPtr(env, jobj, new ICalParameter((icalparameter_kind)kind));
+}

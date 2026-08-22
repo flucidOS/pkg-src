@@ -1,0 +1,28 @@
+/*======================================================================
+ FILE: icalderivedparameter.h
+ CREATOR: eric 20 March 1999
+
+ SPDX-FileCopyrightText: 2000, Eric Busboom <eric@civicknowledge.com>
+ SPDX-License-Identifier: LGPL-2.1-only OR MPL-2.0
+======================================================================*/
+#ifndef ICALDERIVEDPARAMETER_H
+#define ICALDERIVEDPARAMETER_H
+
+/**
+ * @file icalderivedparameter.h
+ * @brief ICalendar parameters.
+ */
+
+#include "libical_ical_export.h"
+#include "icalduration.h"
+#include "icalenumarray.h"
+#include "icalstrarray.h"
+
+#include <stdbool.h>
+
+typedef struct icalparameter_impl icalparameter;
+
+LIBICAL_ICAL_EXPORT const char *icalparameter_enum_to_string(int e);
+LIBICAL_ICAL_EXPORT int icalparameter_string_to_enum(const char *str);
+
+<insert_code_here>
