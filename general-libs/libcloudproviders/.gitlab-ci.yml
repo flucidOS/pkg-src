@@ -1,0 +1,48 @@
+image: fedora:43
+stages:
+  - build
+  - release
+  - deploy
+
+include:
+  - component: gitlab.gnome.org/GNOME/citemplates/release-service@master
+    inputs:
+      dist-job-name: "distcheck-libcloudproviders"
+      tarball-artifact-path: "_build/meson-dist/$CI_PROJECT_NAME-$CI_COMMIT_TAG.tar.xz"
+
+.build-deps:
+  before_script:
+    - dnf install -y gcc ninja-build gettext gi-docgen glib2-devel gobject-introspection-devel vala redhat-rpm-config git python3-pip
+    - pip install meson==1.9.2
+
+build-libcloudproviders:
+  extends: .build-deps
+  stage: build
+  script:
+  - meson setup _build
+  - meson compile -C _build
+  - meson install -C _build
+
+distcheck-libcloudproviders:
+  extends: .build-deps
+  stage: build
+  script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - meson setup _build --auto-features=enabled
+    - meson dist -C _build
+  artifacts:
+    paths:
+      - "_build/meson-dist/*.xz"
+
+pages:
+  extends: .build-deps
+  stage: deploy
+  script:
+  - meson setup _build -Ddocumentation=true
+  - meson compile -C _build
+  - mv _build/docs/libcloudproviders-0.3 public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
