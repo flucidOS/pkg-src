@@ -1,0 +1,99 @@
+.TH LDAPPASSWD 1 "5 December 1998" "LDAPPasswd"
+.\" $OpenLDAP$
+.\" Copyright 1998-1999 The OpenLDAP Foundation All Rights Reserved.
+.\" Copying restrictions apply.  See COPYRIGHT/LICENSE.
+.SH NAME
+ldappasswd \- change the password of an LDAP entry
+.SH SYNOPSIS
+.B ldappasswd
+[\c
+.BR \-A ]
+[\c
+.BI \-a \ oldPasswd\fR]
+.BI \-D \ binddn\fR
+[\c
+.BI \-d \ debuglevel\fR]
+[\c
+.BI \-h \ ldaphost\fR]
+[\c
+.BR \-n ]
+[\c
+.BI \-p \ ldapport\fR]
+[\c
+.BR \-S ]
+[\c
+.BI \-s \ newPasswd\fR]
+[\c
+.BR \-v ]
+[\c
+.BR \-W ]
+[\c
+.BI \-w \ passwd\fR]
+.SH DESCRIPTION
+.B ldappasswd
+is a tool to set the password of an LDAP user.
+It is neither designed nor intended to be a replacement for
+.BR passwd (1)
+and should not be installed as such.
+.LP
+.B ldappasswd
+sets the password of associated with the user.  If the new
+password is not specified on the command line or the user
+doesn't enable prompting, the server will be asked to generate
+a password for the user.
+.SH OPTIONS
+.TP
+.BI \-A
+Prompt for old password.
+This is used instead of specifying the password on the command line.
+.TP
+.BI \-a \ oldPasswd
+Set the old password to \fIoldPasswd\fP.
+.TP
+.BI \-D \ binddn
+Use \fIbinddn\fP to bind to the LDAP directory. \fIbinddn\fP should
+be a string-represented DN as defined in RFC 2253.
+This flag is not optional.  The user DN will be used if the
+bind DN is not provided.
+.TP
+.BI \-d \ debuglevel
+Set the LDAP debugging level to \fIdebuglevel\fP.
+.B ldappasswd
+must be compiled with LDAP_DEBUG defined for this option to have any effect.
+.TP
+.BI \-h \ ldaphost
+Specify an alternate host on which the ldap server is running.
+.TP
+.B \-n
+Do not set password. (Can be useful when used in conjunction with
+.BR \-v \ or
+.BR \-d )
+.TP
+.BI \-S
+Prompt for new password.
+This is used instead of specifying the password on the command line.
+.TP
+.BI \-s \ newPasswd
+Set the new password to \fInewPasswd\fP.
+.TP
+.BI \-p \ ldapport
+Specify an alternate port on which the ldap server is running.
+.TP
+.B \-v
+Increase the verbosity of output.  Can be specified multiple times.
+.TP
+.BI \-W
+Prompt for bind password.
+This is used instead of specifying the password on the command line.
+.TP
+.BI \-w \ passwd
+Use \fIpasswd\fP as the password to bind with.
+.SH SEE ALSO
+.BR ldap_bind (3)
+.SH BUGS
+No transport security layer is provided.
+.SH ACKNOWLEDGEMENTS
+.B	OpenLDAP
+is developed and maintained by The OpenLDAP Project (http://www.openldap.org/).
+.B	OpenLDAP
+is derived from University of Michigan LDAP 3.3 Release.  

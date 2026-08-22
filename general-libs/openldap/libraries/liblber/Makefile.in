@@ -1,0 +1,46 @@
+# $OpenLDAP$
+## Copyright 1998-1999 The OpenLDAP Foundation, All Rights Reserved.
+## COPYING RESTRICTIONS APPLY, see COPYRIGHT file
+##
+## LIBLBER
+##
+
+LIBRARY = liblber.la
+XLIBRARY = ../liblber.a
+
+SRCS= assert.c decode.c encode.c io.c bprint.c \
+	memory.c options.c sockbuf.c
+OBJS= assert.lo decode.lo encode.lo io.lo bprint.lo \
+	memory.lo options.lo sockbuf.lo
+XSRCS= version.c
+
+PROGRAMS= dtest etest idtest
+
+LDAP_INCDIR= ../../include       
+LDAP_LIBDIR= ../../libraries       
+
+XLIBS = -llber
+XXLIBS = 
+
+LINKAGE = @LT_LIB_LINKAGE@
+
+NT_DYN_TEST_DEFS = -DLIBLBER_DECL=dllimport
+
+# Extras for building the library
+EXTRA_DEFS = $(@PLAT@_@LIB_LINKAGE@_LIB_DEFS)
+EXTRA_LIBS =
+
+# Only the test programs will pick up these defs.
+CPPFLAGS = $(@PLAT@_@LIB_LINKAGE@_TEST_DEFS)
+
+dtest:    $(LIBRARY) dtest.o
+	$(LTLINK) $(LDFLAGS) -o $@ dtest.o $(LIBS)
+etest:  $(LIBRARY) etest.o
+	$(LTLINK) $(LDFLAGS) -o $@ etest.o $(LIBS)
+idtest:  $(LIBRARY) idtest.o
+	$(LTLINK) $(LDFLAGS) -o $@ idtest.o $(LIBS)
+
+install-local: FORCE
+	-$(MKDIR) $(DESTDIR)$(libdir)
+	$(LTINSTALL) $(INSTALLFLAGS) -m 644 $(LIBRARY) $(DESTDIR)$(libdir)
+

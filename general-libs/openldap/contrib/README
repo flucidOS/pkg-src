@@ -1,0 +1,38 @@
+OpenLDAP Contributed Software README
+
+OpenLDAP provides a number of freely-distributable LDAP software
+packages.  Though distributed with OpenLDAP, they are not
+part of OpenLDAP.  Each package in this directory has it's
+own use and redistribution restrictions as documented within
+the package.
+
+Current contributions:
+	gtk-tool
+		GTK-based frontend from Predrag Balorda
+
+	ldaptcl
+		TCL API from NeoSoft
+
+	php3-tool
+		PHP3-based frontend from Predrag Balorda
+
+    saucer
+		General purpose command-line LDAP client, modeled
+		after ISODE's DISH (DIrectory SHell) client.
+		Contributed by Eric Rosenquist.  See saucer/README
+		and its man page for more information.
+
+	web_ldap
+		web frontend (in C) from Jens Moller
+
+    web500gw
+		HTTP gateway for X.500, modeled after go500gw.
+		Contributed by Frank Richter.  See web500gw/README
+		for more information.
+
+    whois++
+		WHOIS++ gateway to X.500.  Contributed by Mark Prior.
+		See whois++/README for more information.
+
+
+Please send your contributions to info@OpenLDAP.Org

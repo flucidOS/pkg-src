@@ -1,0 +1,75 @@
+OpenLDAP To Do List
+-------------------
+
+This is a list of projects that need getting done.  They are defined
+by scale of the effort as opposed to priority.  Contribute to projects
+based upon your personal priorities.
+
+If you would like to work on any of these projects, please
+coordinate with the listed individual.   If no one is
+listed, post to OpenLDAP Developer's List (you must be subscribed
+to post).
+	http://www.openldap.org/lists
+
+If you have a project you'd like added to the list, talk it up
+on Developer's list.
+
+Please read:
+	http://www.OpenLDAP.org/devel/programming.html
+	http://www.OpenLDAP.org/devel/contributing.html
+
+
+OpenLDAP 2.0 Projects
+---------------------
+	client API update
+		Implement LDAP errno draft
+	SLAPD
+		Schema Publishing / Enforcement
+	clients
+		Implement SASL/TLS
+		don't use deprecated routines
+		-C/-CC/-R referral chasing options
+	SLAPD/SLURD Admin Guide
+	Update manual pages
+
+
+Other projects:
+
+Large projects
+--------------
+Redesign slapd threading (thread pooling)
+Redesign slapd caching
+Redesign slapd memory allocation fault handling
+Schema Repository
+Modify -lldap to be session-level thread support (ldap_dup)
+Slapd-DB2 - Berkeley DB backend w/ transaction support <ksp@openldap.org>
+Perform a security audit (and fix any hole found)
+
+
+Medium projects
+---------------
+Design and Implement a LDAP C++ API
+Modify -lldap to be reentrant/threadsafe
+	implement LDAP concurrency draft
+Modify libraries to use application specified logging routines
+Modify servers to use reentrant library functions
+Extend slapd to support identd (RFC1413) information in ACLs
+Extend slapd to support hashed userPassword generation
+Port slapd (incl back-ldbm & tools) to NT <gwilliams@openldap.org>
+Port slurpd to NT
+
+
+Small projects
+--------------
+Create ldapquery (from ldapsearch?) to support searching using ldap_getfilter(3)
+Extend gateways to support tcp_wrappers
+Extend slapd/tcp_wrapper to support identd
+Extend mail500 (and other daemons) to use ldap_getfilter(3)
+Add useful information to our FAQ http://www.openldap.org/faq/
+Update any manual page
+
+
+For additional TODO items, see:
+  http://www.openldap.org/its/index.cgi/Software%20Enhancements
+
+$OpenLDAP$

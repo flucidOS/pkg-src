@@ -1,0 +1,7 @@
+# $OpenLDAP$
+#
+# Generic Autoconf INSTALL
+#
+
+H1: General Configure Instructions
+!include "../release/autoconf-install.txt" ; verbatim
