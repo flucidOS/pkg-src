@@ -1,0 +1,23 @@
+name: "FreeBSD build and test"
+
+on: [ push, pull_request ]
+
+jobs:
+  ###
+  #
+  # FreeBSD build job
+  #
+  freebsd:
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3
+    - name: meson test
+      uses: vmactions/freebsd-vm@v0
+      with:
+        prepare: |
+          pkg install -y meson pkgconf evdev-proto libgudev libxml++ bash libevdev
+          pkg install -y -g py3\*-pip python3
+          pip install libevdev pytest pyudev
+        run: |
+          meson setup builddir
+          meson test -C builddir --print-errorlogs
