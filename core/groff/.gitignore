@@ -1,0 +1,73 @@
+# The following artifacts are produced by "bootstrap", remain in a
+# "distclean"-ed tree, and are included in a distribution archive.
+/INSTALL
+/Makefile.in
+/aclocal.m4
+/build-aux/
+/configure
+/gnulib_m4/
+# Neither "clean" nor "distclean" scrub the following.
+/autom4te.cache/
+/configure~
+/lib/
+# build artifacts
+/.version
+/Makefile
+/addftinfo
+/afmtodit
+/charset.alias
+/config.log
+/config.status
+/chem
+/defs.h
+/eqn
+/eqn2graph
+/gdiffmk
+/glilypond
+/gperl
+/gpinyin
+/grap2graph
+/grn
+/grodvi
+/groff
+/grog
+/grolbp
+/grolj4
+/gropdf
+/grops
+/grotty
+/gxditview
+/hpftodit
+/indxbib
+/libbib.a
+/libdriver.a
+/libgroff.a
+/libxutil.a
+/lkbib
+/lookbib
+/mmroff
+/neqn
+/nroff
+/pdfmom
+/pdfroff
+# XXX: do we really need penguin.{pdf,ps} at the top of the build tree?
+/penguin.pdf
+/penguin.ps
+/pfbtops
+/pic
+/pic2graph
+/post-grohtml
+/pre-grohtml
+/preconv
+/ref-add.sed
+/ref-del.sed
+/refer
+/shdeps.sed
+/soelim
+/tbl
+/test-groff
+/tfmtodit
+/troff
+/xtotroff
+# test ("make check") artifacts
+/test-suite.log

@@ -1,0 +1,81 @@
+# Run this to make 'git diff' on .m4 files give nicer hunk context:
+#   git config diff.m4.xfuncname '^((AC_DEFUN|m4_define)[^,)]*)'
+*.m4	diff=m4
+
+# Run this to make 'git diff' on tmac files give nicer hunk context:
+#   git config diff.roff.xfuncname '^['.][	 ]*de1*[		]*.*$'
+*.tmac diff=roff
+
+# Run this to make 'git diff' on texinfo files give nicer hunk context:
+#   git config diff.texinfo.funcname '^@node[	 ][	 ]*\\([^,][^,]*\\)'
+*.texi* diff=texinfo
+
+# Override "Linguist's" terrible guesses of file types.  Its "README.md"
+# says "[m]ost languages are detected by their file extension.  This is
+# the fastest and most common situation."  Checking the validity of such
+# determinations is evidently not thought to be worthwhile.
+*.map linguist-language=Text
+*.mm linguist-language=Roff
+*.proto linguist-language=Text
+# XXX: Do these work or do they need directory structure?
+# TODO: Rename these in-tree mm examples with an '.mm' suffix.
+APP linguist-language=Roff
+COVER linguist-language=Roff
+IND linguist-language=Roff
+LT linguist-language=Roff
+ML linguist-language=Roff
+MOVE linguist-language=Roff
+MUL linguist-language=Roff
+NCOL linguist-language=Roff
+ND linguist-language=Roff
+SETR linguist-language=Roff
+# Font descriptions aren't "information files" in the sense Linguist
+# appears to mean (README, NOTES, BUGS, TODO, etc.).
+AB linguist-language=Text
+ABI linguist-language=Text
+AI linguist-language=Text
+AR linguist-language=Text
+BMB linguist-language=Text
+BMBI linguist-language=Text
+BMI linguist-language=Text
+BMR linguist-language=Text
+CB linguist-language=Text
+CBI linguist-language=Text
+CI linguist-language=Text
+CR linguist-language=Text
+CSH linguist-language=Text
+CSS linguist-language=Text
+CTH linguist-language=Text
+CTS linguist-language=Text
+HB linguist-language=Text
+HBI linguist-language=Text
+HI linguist-language=Text
+HR linguist-language=Text
+HNB linguist-language=Text
+HNBI linguist-language=Text
+HNI linguist-language=Text
+HNR linguist-language=Text
+JPG linguist-language=Text
+JPM linguist-language=Text
+KOG linguist-language=Text
+KOM linguist-language=Text
+PB linguist-language=Text
+PBI linguist-language=Text
+PI linguist-language=Text
+PR linguist-language=Text
+S linguist-language=Text
+SS linguist-language=Text
+TB linguist-language=Text
+TBI linguist-language=Text
+TI linguist-language=Text
+TR linguist-language=Text
+ZCMI linguist-language=Text
+ZD linguist-language=Text
+ZDR linguist-language=Text
+baseline.7 linguist-language=Text
+copyright-chapter.mom linguist-language=Roff
+copyright-default.mom linguist-language=Roff
+hyphen.cs linguist-language=Text
+hyphen.pl linguist-language=Text
+hyphenex.pl linguist-language=Text
+memorandum.* linguist-language=Text

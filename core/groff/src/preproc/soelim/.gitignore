@@ -1,0 +1,8 @@
+# build artifacts
+/.deps/
+/.dirstamp
+/soelim.1
+/soelim.o
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs

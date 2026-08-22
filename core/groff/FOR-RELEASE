@@ -1,0 +1,125 @@
+    Copyright 2013-2026 Free Software Foundation, Inc.
+
+    Copying and distribution of this file, with or without modification,
+    are permitted in any medium without royalty provided the copyright
+    notice and this notice are preserved.
+
+This file describes how to prepare groff for a new release.
+
+
+Before Release
+==============
+
+* If you're the maintainer and haven't already, start the "Automated
+  Upload Registration" process described in the GNU Maintainers' Guide
+  so that you can upload distribution archives to appropriate GNU hosts
+  and actually make releases.
+
+  https://www.gnu.org/prep/maintain/maintain.html#Automated-Upload-Registration
+
+* Update "grog.pl" to include the names of new GNU troff requests and
+  macro names unique to specific packages (and sufficiently heavily used
+  in typical documents).
+
+* Update font description files that we generate from external data and
+  provide with our source distribution.
+
+    Directory  Format                  Tool
+    ---------  ------                  ----
+    devX*      X11 core/server font    xtotroff
+
+  The make(1) target "maintainer-font-descriptions" produces these font
+  descriptions.
+
+* Retrieve current versions of "UnicodeData.txt"[1] and the Adobe Glyph
+  List (AGL)[2], and use them with
+  "src/utils/afmtodit/make-afmtodit-tables" to update
+  "src/utils/afmtodit/afmtodit.tables".
+
+  [1] E.g., <https://www.unicode.org/Public/15.0.0/ucd/UnicodeData.txt>.
+      Check for the latest _released_ version of Unicode at the time.
+      Data for the forthcoming release may be available.
+  [2] <https://github.com/adobe-type-tools/agl-aglfn/blob/master/\
+      glyphlist.txt>
+
+     (<https://raw.githubusercontent.com/adobe-type-tools/agl-aglfn/\
+     master/glyphlist.txt> may be more convenient.)
+
+* Use the same "UnicodeData.txt" file as input to
+  "src/libs/libgroff/make-uniuni" to regenerate
+  "src/libs/libgroff/uniuni.cpp".
+
+* Update the "gnulib" sub-module and "bootstrap" script to the latest
+  stable versions.  See the "HACKING" file for instructions.
+
+* Update the release version number where it is hard-coded or
+  represented as "next".
+  + NEWS (append or remove "release candidate" as applicable)
+  + arch/mingw/grap2graph.cmd
+
+* Update in "src/roff/groff/groff.cpp" the 'printf' that displays the
+  copyright to include the current year if it is not present.  (If no
+  copyrightable changes to the project's code have been made in the
+  current calendar year, use the most recent year in which they have;
+  see the "HACKING" file.)
+
+* Run the "set-man-page-time-stamps" Makefile target from your build
+  directory to fix up the stamps on the man pages.
+
+* Build (and test!) a distribution archive with "make distcheck".  It's
+  not a good idea for any tests to be failing, but if they are, note the
+  fact prominently in the release notes.
+
+* For official releases only (not release candidates), update
+  "doc/webpage.ms" to record the new version number and month of its
+  issue.
+
+* For official releases only, log the fact (and date!) of the release in
+  the "ChangeLog" file.
+
+* Increment the version number by tagging the release or release
+  candidate.  Sign the tag.  groff requires a three-part version,
+  major.minor.revision, so it can populate the `.Y` extension register.
+
+    $ git tag -s -m 'release candidate 1.24.0.rc2' 1.24.0.rc2
+
+* Build and test a distribution archive again with "make distcheck".
+  It's important to do this so that the archive unpacks to an
+  appropriately named source directory.  It's even more important after
+  tagging a first release candidate, because doing so increments the
+  version number visible in installed file names (such as
+  "/usr/share/groff/1.24.0").
+
+* If the distribution archive from the previous step is unacceptable,
+  delete the tag you created and resume development.
+
+    $ git tag -d 1.24.0.rc2
+
+  Otherwise, push the signed tag.
+
+    $ git push origin tag 1.24.0.rc2
+
+* Upload the distribution archive and auxiliary files as described in
+  the "Automated Upload Procedure" section of the GNU Maintainers'
+  Guide.
+
+  https://www.gnu.org/prep/maintain/maintain.html#Automated-Upload-Procedure
+
+
+After Release
+=============
+
+* For official releases, wait several hours for the distribution archive
+  and its detached signature file to percolate through GNU's mirror
+  network.
+
+* For official releases, update the groff home page.
+
+* Make an email announcement per the "ANNOUNCE" (release notes) file.
+
+* If warranted, update the "ANNOUNCE" file to make it a template for the
+  next release.
+
+* If the major or minor version number has incremented, split off
+  a historical "ChangeLog" file and add it to `EXTRA_DIST` in
+  "Makefile.am".

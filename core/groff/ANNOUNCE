@@ -1,0 +1,214 @@
+[[ maintainer: Send to platform-testers for release candidates,
+               info-gnu for releases,
+               info-groff for both,
+               and CC groff and linux-man@vger.kernel.org for both. ]]
+
+[[ groff 1.yy.Y release candidate Z, 1.yy.Y.rcZ, is now available from
+GNU's alpha site.  You may download the distribution archive from there.
+
+  https://alpha.gnu.org/gnu/groff/ ]]
+
+[[ We are pleased to announce the availability of groff 1.yy.Y.  Obtain
+it from the GNU mirror network,
+
+  https://ftpmirror.gnu.org/groff/groff-1.yy.Y.tar.gz
+
+or, if the network is for some reason inoperative, directly from GNU.
+
+  https://ftp.gnu.org/gnu/groff/groff-1.yy.Y.tar.gz ]]
+
+Ensure the integrity of your download by checking this source code
+archive's cryptographic signature; see "Obtaining groff" below.
+
+
+What is groff?
+==============
+
+groff (GNU roff) is a typesetting system that reads plain text input
+that includes formatting commands to produce output in PostScript,
+PDF, HTML, or DVI formats or for display to a terminal.  Formatting
+commands can be low-level typesetting primitives, macros from a
+supplied package, or user-defined macros.  All three approaches can be
+combined.
+
+A reimplementation and extension of troff and other programs from AT&T
+Unix, groff is widely available on POSIX and other systems owing to its
+long association with Unix manuals, including man pages.  It and its
+predecessor have produced several best-selling software engineering
+texts.  groff can create typographically sophisticated documents while
+consuming minimal system resources.
+
+  https://www.gnu.org/software/groff/
+
+
+Changes
+=======
+
+[[
+Since the groff 1.yy.Y.rcZ-1 release candidate was made available on DD
+MONTH, NN people have authored a total of MM commits.
+
+maintainer: Insert output of
+   "git shortlog --summary 1.yy.Y.rcZ-1.."1.yy.Y.rcZ ]]
+
+Thanks to AAA, BBB, and CCC for reporting defects in rcZ-1.
+
+* item
+
+* item
+
+* item
+]]
+
+See "Details" below for changes since the groff 1.23.0 release.
+
+Highlights of groff 1.yy.Y
+--------------------------
+[[ Headline features nominated by our development community include: ]]
+
+* item
+
+* item
+
+* item
+]]
+
+For a more comprehensive list of feature changes, see "News" below.
+
+Much attention has been given to fixing bugs, validating input,
+improving diagnostic messages, and correcting and expanding
+documentation.  The previous release shipped with 314 automated tests;
+this one ships with over NNN.
+
+Details
+-------
+
+Since groff 1.24.0 was released on 28 February 2026, MM people have
+authored a total of over NNN commits.
+
+[[ maintainer: Insert output of
+   "git shortlog --summary 1.24.0..1.yy.Y.rcZ" ]]
+
+As of this writing, per the GNU Savannah bug tracker, the groff
+project has resolved NNN issues as fixed for the 1.yy.0 release.
+
+Classifying these issues by type and the component of the project to
+which they apply, we find the following.
+
+  Type                              Component
+  ----                              ---------
+  Build/installation           NN   Core                           NN
+  Crash/unresponsive           NN   Driver: grohtml                NN
+  Documentation                NN   Driver: gropdf                 NN
+  Feature change               NN   Driver: grops                  NN
+  Incorrect behavior           NN   Driver: grotty                 NN
+  Lint                         NN   Driver: others/general         NN
+  Rendering/cosmetics          NN   Font: devpdf                   NN
+  Test                         NN   Font: devps                    NN
+  Warning/suspicious behavior  NN   Font: others/general           NN
+                                    General                        NN
+                                    Macros: man                    NN
+                                    Macros: mdoc                   NN
+                                    Macros: me                     NN
+                                    Macros: mm                     NN
+                                    Macros: mom                    NN
+                                    Macros: ms                     NN
+                                    Macros: others/general         NN
+                                    Preprocessor: eqn              NN
+                                    Preprocessor: grn              NN
+                                    Preprocessor: html             NN
+                                    Preprocessor: pic              NN
+                                    Preprocessor: preconv          NN
+                                    Preprocessor: refer            NN
+                                    Preprocessor: soelim           NN
+                                    Preprocessor: tbl              NN
+                                    Preprocessor: others/general   NN
+                                    Utilities                      NN
+
+Another way of capturing the amount of revision is as follows.
+
+$ git diff --stat 1.24.0 1.yy.Y | tail -n 1
+ [[ maintainer: insert output ]]
+
+
+Obtaining groff
+===============
+
+[[ maintainer: for release candidates:
+Here are the compressed sources and a GPG detached signature[*].
+  https://alpha.gnu.org/gnu/groff/groff-1.yy.Y.tar.gz
+  https://alpha.gnu.org/gnu/groff/groff-1.yy.Y.tar.gz.sig
+]]
+
+[[ maintainer: for final release:
+Here are the compressed sources and a GPG detached signature[*].
+  https://ftp.gnu.org/gnu/groff/groff-1.yy.Y.tar.gz
+  https://ftp.gnu.org/gnu/groff/groff-1.yy.Y.tar.gz.sig
+
+Use a mirror for higher download bandwidth.
+  https://ftpmirror.gnu.org/groff/groff-1.yy.0.tar.gz
+  https://ftpmirror.gnu.org/groff/groff-1.yy.0.tar.gz.sig
+]]
+
+Here are the SHA-1 and SHA-256 checksums.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  groff-1.yy.0.tar.gz
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy  groff-1.yy.0.tar.gz
+
+The SHA-256 checksum is encoded in Base64 instead of the hexadecimal
+form that most checksum tools default to.  The mechanism follows.
+
+sha256sum < groff-1.yy.0.tar.gz | cut -f1 -d\  | xxd -r -p | base64
+
+(Because "base64" reads from a pipe, it doesn't know the file name, and
+so the file name will not appear in the output.)
+
+[*] Use a .sig file to verify that the corresponding file (without the
+    .sig suffix) is intact.  First, be sure to download both the .sig
+    file and the corresponding archive.  Then, verify the archive.
+
+      gpg --verify groff-1.yy.Y.tar.gz{.sig,}
+
+    If that command fails because you don't have the required public
+    key, you can import it.
+
+      wget -O 108747.asc \
+        'https://savannah.gnu.org/people/viewgpg.php?user_id=108747'
+      gpg --import 108747.asc
+
+    Re-run the 'gpg --verify' command above again subsequently.
+
+
+Caveats
+=======
+
+o GNU tools, or otherwise POSIX-conforming ones, are generally required
+  to build on Solaris 10 or 11.  See the "PROBLEMS" file in the
+  distribution archive.
+
+o Solaris 10 has known problems with automated tests; see the "PROBLEMS"
+  file in the distribution archive.
+
+
+News
+====
+
+[[ maintainer: insert output of
+   "sed -n '/VERSION 1\.yy/{n;:X;n;/VERSION 1\.24/q;p;bX}' NEWS" ]]
+
+
+Acknowledgements
+================
+
+We'd like to thank the following people for helping ensure the quality
+of this release.
+
+[[ maintainer: Collect "thanks to" credits from the ChangeLog file, for
+   instance with "grep -i -A1 thanks ChangeLog".  A manual merge of
+   similar from the contrib/ change log files may also be necessary. ]]
+
+Bjarni Ingi Gislason
+Clem Cole
+Dave Kemper
+Peng Zhang
+Rocket Ma

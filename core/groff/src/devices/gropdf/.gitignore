@@ -1,0 +1,6 @@
+# build artifacts
+/gropdf.1
+/pdfmom.1
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs

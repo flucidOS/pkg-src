@@ -1,0 +1,11 @@
+# build artifacts
+/.deps/
+/.dirstamp
+/grn.1
+/hdb.o
+/hgraph.o
+/hpoint.o
+/main.o
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs

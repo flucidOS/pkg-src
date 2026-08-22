@@ -1,0 +1,5 @@
+# build artifacts
+/gdiffmk.1
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs

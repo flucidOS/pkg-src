@@ -1,0 +1,17 @@
+# build artifacts
+/.deps/
+/.dirstamp
+/pic.1
+/pic-common.o
+/pic-lex.o
+/pic-main.o
+/pic-object.o
+/pic-pic.o
+/pic-tex.o
+/pic-troff.o
+/pic.cpp
+/pic.hpp
+/pic.output
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs

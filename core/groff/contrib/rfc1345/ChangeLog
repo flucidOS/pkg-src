@@ -1,0 +1,82 @@
+2026-01-21  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* rfc1345.am: Drop unused macro `rfc1345_builddir`.  Automake
+	itself doesn't require it, and we never interpolate it.
+
+2025-12-29  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* tests/rfc1345-smoke-test.sh: Rename this file...
+	* tests/smoke-test.sh: ...to this.
+	* rfc1345.am (rfc1345_TESTS): Update file name.
+
+2025-12-21  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* rfc1345.tmac: Track Unicode 16 recommended practice and a Vim
+	9.1.1640 change.  Add `<[` and `]>` character definition for
+	U+27E[89] left and right mathematical angle brackets.
+	Redefine `</` and `/>` characters as U+300[89] left and right
+	angle brackets instead of U+232[9A] left- and right-pointing
+	angle brackets.
+
+2025-12-18  Alexis Hildebrandt <afh@surryhill.net>
+
+	* rfc1345.tmac: Strip undesired spaces from ends of character
+	definitions {`sed -i -Ee 's@( +)\\"@\\"\1@'`}.
+
+	Fixes <https://savannah.gnu.org/bugs/?67827>.
+
+2025-12-19  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	Regression-test Savannah #67827.
+
+	* tests/character-definitions-lack-space.sh: Do it.
+	* rfc1345.am (rfc1345_TESTS): Run test.
+
+2025-04-27  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* rfc1345.tmac: Add Vim 9.1.1065 digraph `.=` for U+2250
+	"APPROACHES THE LIMIT".
+	* groff_rfc1345.7.man: Document it.
+
+2023-10-23  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* rfc1345.tmac: Fix copy-and-paste errors.  Annotate which
+	version of Vim introduced the ",." digraph.
+
+2023-10-20  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	* rfc1345.tmac: Add Vim digraphs W`, w`, Y`, y`, oo, 4', and =e.
+
+2021-02-03  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	Add smoke test.
+
+	* tests/rfc1345-smoke-test.sh: Add test.
+	* rfc1345.am (rfc1345_TESTS, TESTS, EXTRA_DIST): Run test.
+
+2021-02-02  G. Branden Robinson <g.branden.robinson@gmail.com>
+
+	Integrate rfc1345.tmac into build system.
+
+	* rfc1345.am: Do it.
+
+2021-02-02  Dorai Sitaram <ds26gte@yahoo.com>
+
+	* COPYRIGHT:
+	* groff_rfc1345.7.man:
+	* rfc1345.tmac: Add new macro package.
+
+	Fixes <https://savannah.gnu.org/bugs/?59839>.
+
+________________________________________________________________________
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Local Variables:
+fill-column: 72
+mode: change-log
+version-control: never
+End:
+vim:set autoindent textwidth=72:

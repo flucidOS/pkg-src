@@ -1,0 +1,8 @@
+# build artifacts
+/README
+/chem.1
+/examples/122/README
+/examples/README
+# test ("make check") artifacts
+/tests/*.log
+/tests/*.trs
