@@ -1,0 +1,666 @@
+'\"
+'\" Copyright (c) 2005-2006 Donal K. Fellows
+'\" Copyright (c) 2021 Nathan Coulter
+'\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+.TH chan n 8.5 Tcl "Tcl Built-In Commands"
+.so man.macros
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+chan \- Reads, writes and manipulates channels.
+.SH SYNOPSIS
+\fBchan \fIoperation\fR ?\fIarg arg ...\fR?
+.BE
+.SH DESCRIPTION
+.PP
+\fBchan\fR provides several operations for reading from, writing to, and
+otherwise manipulating channels, e.g. those created by \fBopen\fR and
+\fBsocket\fR, or the default channels \fBstdin\fR, \fBstdout\fR or \fBstderr\fR
+which correspond respectively to the standard input, output, and error streams
+of the process.  Any unique abbreviation for \fIoperation\fR is acceptable.
+Available operations are:
+.TP
+\fBchan blocked \fIchannelName\fR
+.
+Returns 1 when the channel is in non-blocking mode and the last input operation
+on the channel failed because it would have otherwise caused the process to
+block, and 0 otherwise.  Each Tcl channel is in blocking mode unless configured
+otherwise.
+.TP
+\fBchan close \fIchannelName\fR ?\fIdirection\fR?
+.
+Closes and destroys the named channel, deleting any existing event handlers
+established for the channel, and returns the empty string.  If \fIdirection\fR is
+given, it is
+.QW\fBread\fR
+or
+.QW\fBwrite\fR
+or any unique abbreviation of those words, and only that side of the channel is
+closed. I.e. a read-write channel may become read-only or write-only.
+Closing a read-only channel for reading, or closing a write-only channel for
+writing is the same as simply closing the channel.  It is an error to close a
+read-only channel for writing or to close a write-only channel for reading.
+.RS
+.PP
+When a channel is closed for writing, any buffered output on the channel is
+flushed. When a channel is closed for reading, any buffered input is discarded.
+When a channel is destroyed the underlying resource is closed and the channel
+is thereafter unavailable.
+.PP
+\fBchan close\fR fully flushes any output before closing the write side of a
+channel unless it is non-blocking mode, where it returns immediately and the
+channel is flushed in the background before finally being closed.
+.PP
+\fBchan close\fR may return an error if an error occurs while flushing
+output.  If a process in a command pipeline created by \fBopen\fR returns an
+error, \fBchan close\fR generates an error in the same manner as \fBexec\fR.
+.PP
+Closing one side of a socket or command pipeline may lead to the shutdown() or
+close() of the underlying system resource, leading to a reaction from whatever
+is on the other side of the pipeline or socket.
+.PP
+If the channel for a command pipeline is in blocking mode, \fBchan close\fR
+waits for the connected processes to complete.
+.PP
+\fBchan close\fR only affects the current interpreter.  If the channel is open
+in any other interpreter, its state is unchanged there.  See \fBinterp\fR for a
+description of channel sharing.
+.PP
+When the last interpreter sharing a channel is destroyed, the channel is
+switched to blocking mode and fully flushed and then closed.
+.RE
+.TP
+\fBchan configure \fIchannelName\fR ?\fIoptionName\fR? ?\fIvalue\fR? ?\fIoptionName value\fR?...
+.
+Configures or reports the configuration of \fIchannelName\fR.
+.RS
+.PP
+If no \fIoptionName\fR or \fIvalue\fR arguments are given,
+\fBchan configure\fR returns a dictionary of option names and
+values for the channel.  If \fIoptionName\fR is supplied without a \fIvalue\fR,
+\fBchan configure\fR returns the current value of the named option.  If one or
+more pairs of \fIoptionName\fR and \fIvalue\fR are supplied,
+\fBchan configure\fR sets each of the named options to the corresponding
+\fIvalue\fR and returns the empty string.
+.PP
+The options described below are supported for all channels. Each type of
+channel may provide additional options. Those options are described in the
+relevant documentation. For example, additional options are documented for
+\fBsocket\fR, and also for serial devices at \fBopen\fR.
+.TP
+\fB\-blocking\fR \fIboolean\fR
+.
+If \fB\-blocking\fR is set to \fBtrue\fR, which is the default, reading from or
+writing to the channel may cause the process to block indefinitely.  Otherwise,
+operations such as \fBchan gets\fR, \fBchan read\fR, \fBchan puts\fR, \fBchan
+flush\fR, and \fBchan close\fR take care not to block.  Non-blocking mode in
+generally requires that the event loop is entered, e.g. by calling
+\fBTcl_DoOneEvent\fR or \fBvwait\fR or by using Tk, to give Tcl a chance to
+process events on the channel.
+.TP
+\fB\-buffering\fR \fInewValue\fR
+.
+If \fInewValue\fR is \fBfull\fR, which is the default, output is buffered
+until the internal buffer is full or until \fBchan flush\fR is called. If
+\fInewValue\fR is \fBline\fR, output is flushed each time a end-of-line
+character is written. If \fInewValue\fR is \fBnone\fR, output is flushed after
+every output operation.  For \fBstdin\fR, \fBstdout\fR, and channels that
+connect to terminal-like devices, the default value is \fBline\fR.  For
+\fBstderr\fR the default value is \fBnone\fR.
+.TP
+\fB\-buffersize\fR \fInewSize\fR
+.
+\fInewSize\fR, an integer no greater than one million, is the size in bytes of
+any input or output buffers subsequently allocated for this channel.
+.TP
+\fB\-encoding\fR ?\fIname\fR?
+.
+Sets the encoding of the channel.  \fIname\fR is either one of the names
+returned by \fBencoding names\fR, or
+.QW \fBbinary\fR
+\&. Input is converted from the encoding into Unicode, and output is converted
+from Unicode to the encoding.
+.RS
+.PP
+\fBbinary\fR is an alias for \fBiso8859-1\fR: Each byte read from the
+channel becomes the Unicode character having the same value as that byte, and
+each character written to the channel becomes a single byte in the output,
+allowing Tcl to work seamlessly with binary data as long as each "character" in
+the data remains in the range of 0 to 255 so that there is no distinction between
+binary data and text.  For example, A JPEG image can be read from a
+\fBbinary\fR channel, manipulated, and then written back to a \fBbinary\fR
+channel.
+
+For working with binary data \fB\-translation binary\fR is usually used
+instead, as it sets the encoding to \fBbinary\fR and also disables other
+translations on the channel.
+.PP
+The encoding of a new channel is the value of \fBencoding system\fR,
+which returns the platform- and locale-dependent system encoding used to
+interface with the operating system,
+.RE
+.TP
+\fB\-eofchar\fR \fIchar\fR
+.TP
+\fB\-eofchar\fR \fB{\fIinChar outChar\fB}\fR
+.
+\fIchar\fR signals the end of the data when it is encountered in the input.
+For output, the character is added when the channel is closed.  If \fIchar\fR
+is the empty string, there is no special character that marks the end of the
+data.  For read-write channels, one end-of-file character for input and another
+for output may be given.  When only one end-of-file character is given it is
+applied to both input and output.  For a read-write channel two values are
+returned even if they are are identical.
+
+The default value is the empty string, except that under Windows the default
+value for reading is Control-z (\ex1A).  The acceptable range is \ex01 -
+\ex7f.  A value outside this range results in an error.
+.TP
+\fB\-translation\fR \fItranslation\fR
+.TP
+\fB\-translation\fR \fB{\fIinTranslation outTranslation\fB}\fR
+.
+In Tcl a single line feed (\en) represents the end of a line.  However,
+at the destination the end of a line may be represented differently on
+different platforms, or even for different devices on the same platform.  For
+example, under UNIX line feed is used in files and a
+carriage-return-linefeed sequence is normally used in network connections.
+Therefore, on input, e.g. with \fBchan gets\fR and \fBchan read\fR, each
+external end-of-line character is translated into a line feed.  On
+output, e.g. with \fBchan puts\fR, each line feed is translated to the external
+end-of-line character.  The default translation, \fBauto\fR, handles all the common
+cases, and \fB\-translation\fR provides explicit control over the end-of-line
+character.
+.RS
+.PP
+Returns the input translation for a read-only channel, the output translation
+for a write-only channel, and both the input translation and the the output
+translation for a  read-write channel.  When two translations are given, they
+are the input and output translation, respectively.  When only one translation
+is given for a read-write channel, it is the translation for both input and
+output.  The following values are currently supported:
+.TP
+\fBauto\fR
+.
+The default.  For input each occurrence of a line feed (\fBlf\fR), carriage
+return (\fBcr\fR), or carriage return followed by a line feed (\fBcrlf\fR) is
+translated into a line feed.  For output, each line feed is translated into a
+platform-specific representation:  For all Unix variants it is \fBlf\fR, and
+for all Windows variants it is \fBcrlf\fR, except that for sockets on all
+platforms it is \fBcrlf\fR for both input and output.
+.TP
+\fBbinary\fR
+.
+Like \fBlf\fR, no end-of-line translation is performed, but in addition,
+\fB\-eofchar\fR is set to the empty string to disable it, and \fB\-encoding\fR
+is set to \fBbinary\fR.  With this one setting, a channel is fully configured
+for binary input and output.
+.TP
+\fBcr\fR
+.
+The end of a line is represented in the external data by a single carriage
+return character.  For input, each carriage return is translated to a line
+feed, and for output each line feed character is translated to a carriage
+return.
+.TP
+\fBcrlf\fR
+.
+The end of a line is represented in the external data by a carriage return
+character followed by a line feed.  For input, each carriage-return-linefeed
+sequence is translated to a line feed.  For output, each line feed is
+translated to a carriage-return-linefeed sequence.  This translation is
+typically used for network connections, and also on Windows systems.
+.TP
+\fBlf\fR
+.
+The end of a line in the external data is represented by a line feed so no
+translations occur during either input or output.  This translation is
+typically used on UNIX platforms,
+.RE
+.RE
+.TP
+\fBchan copy \fIinputChan outputChan\fR ?\fB\-size \fIsize\fR? ?\fB\-command \fIcallback\fR?
+.
+Copies data from \fIinputChan\fR to \fIoutputChan\fR, leveraging internal
+buffers to avoid extra copies and to avoid buffering too much data in main
+memory when copying large files to slow destinations like network sockets.
+.RS
+.PP
+If \fB\-size\fR is given, the size is in bytes if the two channels have the
+same encoding and in characters otherwise, and only that amount is copied.
+Otherwise, all data until the end of the file is copied.
+
+\fBchan copy\fR blocks until the copy is complete and returns the number of
+bytes or characters written to \fIoutputChan\fR.
+.PP
+If \fB\-command\fR is given, \fBchan copy\fR returns immediately, the copy is
+carried out in the background, and then \fIcallback\fR is called with the
+number of bytes written to \fIoutputChan\fR as its first argument, and the
+error message for any error that occurred as its second argument.
+\fIinputChan\fR and \fIoutputChan\fR are automatically configured for
+non-blocking mode if needed.  Background copying only works correctly if the
+event loop is active, e.g. via \fBvwait\fR or Tk.
+.PP
+During a background copy no other read or write operation may be performed on
+\fIinputChan\fR or \fIoutputChan\fR.  If either \fIinputChan\fR or
+\fIoutputChan\fR is closed while the copy is in progress copying ceases and
+\fBno\fR callback is made.  If \fIinputChan\fR is closed all data already queued
+is written to \fIoutputChan\fR.
+.PP
+The should be no event handler established for \fIinputChan\fR  because it may
+become readable during a background copy.  An attempt to read or write
+from within an event handler results result in the error,  "channel busy".
+.PP
+Due to end-of-line translation the number of bytes read from \fIinputChan\fR
+may be different than the number of bytes written to \fIoutputChan\fR.  Only
+the number of bytes written to \fIoutputChan\fR is reported.
+.PP
+\fBChan copy\fR reads the data according to the \fB\-encoding\fR,
+\fB\-translation\fR, and \fB\-eofchar\fR of the source and writes to the
+destination according to the configuration for that channel.  If the encoding
+and translation of both channels is \fBbinary\fR and the \fB\-eofchar\fR of
+both channels is the empty string, an identical copy is made.  If only the
+encoding of the destination is \fBbinary\fR, Tcl's internal modified UTF-8
+representation of the characters read from the source is written to the
+destination. If only the encoding of the source is \fBbinary\fR, each byte read
+becomes one Unicode character in the range of 0 to 255, and that character is
+subject to the encoding and translation of the destination as it is written.
+.RE
+.TP
+\fBchan create \fImode cmdPrefix\fR
+.
+Creates a new channel, called a \fBreflected\fR channel, with \fIcmdPrefix\fR
+as its handler, and returns the name of the channel.  \fBcmdPrefix\fR is the
+first words of a command that provides the interface for a \fBrefchan\fR.
+.RS
+.PP
+\fBImode\fR is a list of one or more of the strings
+.QW \fBread\fR
+or
+.QW \fBwrite\fR
+, indicating whether the channel is a read channel, a write channel, or both.
+It is an error if the handler does not support the chosen mode.
+.PP
+The handler is called as needed from the global namespace at the top level, and
+command resolution happens there at the time of the call.  If the handler is
+renamed or deleted any subsequent attempt to call it is an error, which may
+not be able to describe the failure.
+.PP
+The handler is always called in the interpreter and thread it was created in,
+even if the channel was shared with or moved into a different interpreter in a
+different thread.  This is achieved through event dispatch, so if the event
+loop is not entered, e.g. by calling \fBTcl_DoOneEvent\fR or \fBvwait\fR or
+using Tk, the thread performing the channel operation \fIblocks
+indefinitely\fR, resulting in deadlock.
+.PP
+One side of a channel may be in one thread while the other side is in a
+different thread, providing a stream-oriented bridge between the threads. This
+provides a method for regular stream communication between threads as an
+alternative to sending commands.
+.PP
+When the interpreter the handler is in is deleted each channel associated with
+the handler is deleted as well, regardless of which interpreter or thread it
+is currently in or shared with.
+.PP
+\fBchan create\fR is \fBsafe\fR and is accessible to safe interpreters.  The
+handler is always called in the safe interpreter it was created in.
+.RE
+.TP
+\fBchan eof \fIchannelName\fR
+.
+Returns 1 if the last read on the channel failed because the end of the data
+was already reached, and 0 otherwise.
+.TP
+\fBchan event \fIchannelName event\fR ?\fIscript\fR?
+.
+Arranges for the given script, called a \fBchannel event hndler\fR, to be
+called whenever the given event, one of
+.QW \fBreadable\fR
+or
+.QW \fBwritable\fR
+occurs on the given channel, replacing any script that was previously set.  If
+\fIscript\fR is the empty string the current handler is deleted.  It is also
+deleted when the channel is closed.  If \fIscript\fR is omitted, either the
+existing script or the empty string is returned.  The event loop must be
+entered, e.g. via \fBvwait\fR or \fBupdate\fR, or by using Tk, for handlers to
+be evaluated.
+
+.RS
+.PP
+\fIscript\fR is evaluated at the global level in the interpreter it was
+established in.  Any resulting error is handled in the background, i.e. via
+\fBinterp bgerror\fR.  In order to prevent an endless loop due to a buggy
+handler, the handler is deleted if \fIscript\fR returns an error so that it is
+not evaluated again.
+
+.PP
+Without an event handler, \fBchan gets\fR or \fBchan read\fR on a channel in
+blocking mode may block until data becomes available, become during which the
+thread is unable to perform other work or respond to events on other channels.
+This could cause the application to appear to
+.QW "freeze up"
+\&.
+Channel event handlers allow events on the channel to direct channel handling
+so that the reader or writer can continue to perform other processing while
+waiting for a channel to become available and then handle channel operations
+when the channel is ready for the operation.
+.PP
+A
+.QW readable
+event occurs when there is data that can be read from the channel and also when
+there is an error on the channel.  The handler must check for these conditions
+and handle them appropriately.  For example, a handler that does not check
+whether the end of the data has been reached may be repeatedly evaluated in a
+busy loop until the channel is closed.
+.PP
+A
+.QW writable
+event occurs when at least one byte of data can be written, or if there is an
+error on the channel.  A client socket opened in non-blocking mode becomes
+writable when it becomes connected or if the connection fails.
+.PP
+Event-driven channel handling works best for channels in non-blocking mode.  A
+channel in blocking mode blocks when \fBchan puts\fR writes more data than the
+channel can accept at the moment, and when \fBchan gets\fR or \fBchan read\fR
+requests more data than is currently available.  When a channel blocks, the
+thread can not do any other processing or service any other events.  A channel
+in non-blocking mode allows a thread to carry on with other work and get back
+to the channel at the right time.
+.RE
+.TP
+\fBchan flush \fIchannelName\fR
+.
+For a channel in blocking mode, flushes all buffered output to the destination,
+and then returns.  For a channel in non-blocking mode, returns immediately
+while all buffered output is flushed in the background as soon as possible.
+.TP
+\fBchan gets \fIchannelName\fR ?\fIvarName\fR?
+.
+Returns the next line from the channel, removing the trailing line feed, or if
+\fIvarName\fR is given, assigns the line to that variable and returns the
+number of characters read.
+the line that was read, removing the trailing line feed, or returns the
+empty string if there is no data to return and the end of the file has been
+reached, or in non-blocking mode, if no complete line is currently available.
+If \fIvarName\fR is given, assigns the line that was read to variable named
+\fIvarName\fR  and returns the number of characters that were read, or -1 if
+there no data available and the end of the channel was reached or the channel
+is in non-blocking mode.
+.RS
+.PP
+If the end of the channel is reached the data read so far is returned or
+assigned to \fIvarName\fR. When \fIvarName\fR is not given, \fBchan eof\fR may
+indicate that the empty string means that the end of the data has been reached,
+and \fBchan blocked\fR may indicate that that the empty string means there
+isn't currently enough data do return the next line.
+.RE
+.TP
+\fBchan names\fR ?\fIpattern\fR?
+.
+Returns a list of all channel names, or if \fIpattern\fR is given, only those
+names that match according to the rules of \fBstring match\fR.
+.TP
+\fBchan pending \fImode channelName\fR
+.
+Returns the number of bytes of input
+when \fImode\fR is
+.QW\fBinput\fR
+, or output when \fImode\fR is
+.QW\fBoutput\fR
+, that are currently internally buffered for the channel.  Useful in a readable
+event callback to impose limits on input line length to avoid a potential
+denial-of-service attack where an extremely long line exceeds the available
+memory to buffer it.  Returns -1 if the channel was not opened for the mode in
+question.
+.TP
+\fBchan pipe\fR
+Creates a pipe, i.e. a readable channel and a writable channel, and returns the
+names of the readable channel and the writable channel.  Data written to the
+writable channel can be read from the readable channel.  Because the pipe is a
+real system-level pipe, it can be connected to other processes using
+redirection.  For example, to redirect \fBstderr\fR from a subprocess into one
+channel, and \fBstdout\fR into another, \fBexec\fR with "2>@" and ">@", each
+onto the writable side of a pipe, closing the writable side immediately
+thereafter so that EOF is signaled on the read side once the subprocess has
+closed its output, typically on exit.
+.RS
+.PP
+Due to buffering, data written to one side of a pipe might not immediately
+become available on the other side.  Tcl's own buffers can be configured via
+\fBchan configure -buffering\fR, but overall behaviour still depends on
+operating system buffers outside of Tcl's control. Once the write side of the
+channel is closed, any data remaining in the buffers is flushed through to the
+read side.  It may be useful to arrange for the connected process to flush at
+some point after writing to the channel or to have it use some system-provided
+mechanism to configure buffering.  When two pipes are connected to the same
+process, one to send data to the process, and one to read data from the
+process, a deadlock may occur if the channels are in blocking mode:  If
+reading, the channel may block waiting for data that can never come because
+buffers are only flushed on subsequent writes, and if writing, the channel may
+block while waiting for the buffers to become free, which can never happen
+because the reader can not read while the writer is blocking.  To avoid this
+issue, either put the channels into non-blocking mode and use event handlers,
+or place the read channel and the write channel in separate interpreters in
+separate threads.
+.RE
+.TP
+\fBchan pop \fIchannelName\fR
+Removes the topmost transformation handler from the channel if there is one,
+and closes the channel otherwise. The result is normally the empty string, but
+may be an error in some situations, e.g. when closing the underlying resource
+results in an error.
+.TP
+\fBchan postevent \fIchannelName eventSpec\fR
+.
+For use by handlers established with \fBchan create\fR.  Notifies Tcl that
+that one or more event(s) listed in \fIeventSpec\fR, each of which is either
+.QW\fBread\fR
+or
+.QW\fBwrite\fR.
+, have occurred.
+.RS
+.PP
+For use only by handlers for a channel created by \fBchan create\fR.  It is an
+error to post an event for any other channel.
+.PP
+Since only the handler for a reflected channel channel should post events it is
+an error to post an event from any interpreter other than the interpreter that
+created the channel.
+.PP
+It is an error to post an event that the channel has no interest in.  See
+\fBwatch\fR in the \fBrefchan\fR documentation for more information
+.PP
+\fBchan postevent\fR is available in safe interpreters, as any handler for a
+reflected channel would have been created, and will be evaluated in that
+interpreter as well.
+.RE
+.TP
+\fBchan push \fIchannelName cmdPrefix\fR
+Adds a new transformation handler on top of the channel and returns a handle
+for the transformation.  \fIcmdPrefix\fR is the first words of a command that
+provides the interface documented for \fBtranschan\fR, and transforms data on
+the channel, It is an error if handler does not support the mode(s) the channel
+is in.
+.TP
+\fBchan puts\fR ?\fB\-nonewline\fR? ?\fIchannelName\fR? \fIstring\fR
+.
+Writes \fIstring\fR and a line feed to the channel.  If \fB\-nonewline\fR is
+given, the trailing line feed is not written. The default channel is
+\fBstdout\fR.
+.RS
+.PP
+Each line feed in the output is translated according to the configuration of
+\fB\-translation\fR.
+.PP
+Because Tcl internally buffers output, characters written to a channel may not
+immediately be available at the destination.  Tcl normally delays output until
+the buffer is full or the channel is closed. \fBchan flush\fR forces output in
+the direction of the destination.
+.PP
+When the output for a channel in blocking mode fills up, \fBchan puts\fR blocks
+until space in the buffer is available again, but for a channel in non-blocking
+mode, it returns immediately and the data is written in the background as fast
+possible, constrained by the speed at which as the destination accepts it.
+Output to a channel in non-blocking mode only works properly when the
+application enters the event loop, giving Tcl a chance to find out that the
+destination is ready to accept more data.  When a channel is in non-blocking
+mode, Tcl's internal buffers can hold an arbitrary amount of data, possibly
+consuming a large amount of memory.  To avoid wasting memory, channels in
+non-blocking mode should normally be handled using \fBchan event\fR, where the
+application only invokes \fBchan puts\fR after being recently notified through
+a file event handler that the channel is ready for more output data.
+.RE
+.TP
+\fBchan read \fIchannelName\fR ?\fInumChars\fR?
+.TP
+\fBchan read \fR?\fB\-nonewline\fR? \fIchannelName\fR
+.
+Reads and returns the next \fInumChars\fR characters from the channel. If
+\fInumChars\fR is omitted, all available characters up to the end of the file
+are read, or if the channel is in non-blocking mode, all currently-available
+characters are read.  If there is an error on the channel, reading ceases and
+an error is returned.  If \fInumChars\fR is not given, \fB\-nonewline\fR
+may be given, causing any any trailing line feed to be trimmed.
+.RS
+.PP
+If the channel is in non-blocking mode, fewer characters than requested may be
+returned.  If the channel is configured to use a multi-byte encoding, bytes
+that do not form a complete character are retained in the buffers until enough
+bytes to complete the character accumulate, or the end of the data is reached.
+\fB\-nonewline\fR is ignored if characters are returned before reaching the end
+of the file.
+.PP
+Each end-of-line sequence according to the value of \fB\-translation\fR is
+translated into a line feed.
+.PP
+When reading from a serial port, most applications should configure the serial
+port channel to be in non-blocking mode, but not necessarily use an event
+handler since most serial ports are comparatively slow.  It is entirely
+possible to get a \fBreadable\fR event for each individual character.  In
+blocking mode, \fBchan read\fR blocks forever when reading to the end of the
+data if there is no \fBchan configure -eofchar\fR configured for the channel.
+.RE
+.TP
+\fBchan seek \fIchannelName offset\fR ?\fIorigin\fR?
+.
+Sets the current position for the data in the channel to integer \fIoffset\fR
+bytes relative to \fIorigin\fR.  A negative offset moves the current position
+backwards from the origin.  \fIorigin\fR is one of the
+following:
+.RS
+.PP
+.TP 10
+\fBstart\fR
+.
+The origin is the start of the data.  This is the default.
+.TP 10
+\fBcurrent\fR
+.
+The origin is the current position.
+.TP 10
+\fBend\fR
+.
+The origin is the end of the data.
+.PP
+\fBChan seek\fR flushes all buffered output even if the channel is in
+non-blocking mode, discards any buffered and unread input, and returns the
+empty string or an error if the channel does not support seeking.
+.PP
+\fIoffset\fR values are byte offsets, not character offsets.  Unlike \fBchan
+read\fR, both \fBchan seek\fR and \fBchan tell\fR operate in terms of bytes,
+not characters,
+.RE
+.TP
+\fBchan tell \fIchannelName\fR
+.
+Returns the offset in bytes of the current position in the underlying data, or
+-1 if the channel does not suport seeking. The value can be passed to \fBchan
+seek\fR to set current position to that offset.
+.TP
+\fBchan truncate \fIchannelName\fR ?\fIlength\fR?
+.
+Flushes the channel and truncates the data in the channel to \fIlength\fR
+bytes, or to the current position in bytes if \fIlength\fR is omitted.
+.
+.SH EXAMPLES
+.PP
+In the following example a file is opened using the encoding CP1252, which is
+common on Windows, searches for a string, rewrites that part, and truncates the
+file two lines later.
+.PP
+.CS
+set f [open somefile.txt r+]
+\fBchan configure\fR $f -encoding cp1252
+set offset 0
+
+\fI# Search for string "FOOBAR" in the file\fR
+while {[\fBchan gets\fR $f line] >= 0} {
+    set idx [string first FOOBAR $line]
+    if {$idx >= 0} {
+        \fI# Found it; rewrite line\fR
+
+        \fBchan seek\fR $f [expr {$offset + $idx}]
+        \fBchan puts\fR -nonewline $f BARFOO
+
+        \fI# Skip to end of following line, and truncate\fR
+        \fBchan gets\fR $f
+        \fBchan gets\fR $f
+        \fBchan truncate\fR $f
+
+        \fI# Stop searching the file now\fR
+        break
+    }
+
+    \fI# Save offset of start of next line for later\fR
+    set offset [\fBchan tell\fR $f]
+}
+\fBchan close\fR $f
+.CE
+.PP
+A network server that echoes its input line-by-line without
+preventing servicing of other connections at the same time:
+.PP
+.CS
+# This is a very simple logger...
+proc log message {
+    \fBchan puts\fR stdout $message
+}
+
+# This is called whenever a new client connects to the server
+proc connect {chan host port} {
+    set clientName [format <%s:%d> $host $port]
+    log "connection from $clientName"
+    \fBchan configure\fR $chan -blocking 0 -buffering line
+    \fBchan event\fR $chan readable [list echoLine $chan $clientName]
+}
+
+# This is called whenever either at least one byte of input
+# data is available, or the channel was closed by the client.
+proc echoLine {chan clientName} {
+    \fBchan gets\fR $chan line
+    if {[\fBchan eof\fR $chan]} {
+        log "finishing connection from $clientName"
+        \fBchan close\fR $chan
+    } elseif {![\fBchan blocked\fR $chan]} {
+        # Didn't block waiting for end-of-line
+        log "$clientName - $line"
+        \fBchan puts\fR $chan $line
+    }
+}
+
+# Create the server socket and enter the event-loop to wait
+# for incoming connections...
+socket -server connect 12345
+vwait forever
+.CE
+.SH "SEE ALSO"
+close(n), eof(n), fblocked(n), fconfigure(n), fcopy(n), file(n),
+fileevent(n), flush(n), gets(n), open(n), puts(n), read(n), seek(n),
+socket(n), tell(n), refchan(n), transchan(n)
+.SH KEYWORDS
+channel, input, output, events, offset
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
