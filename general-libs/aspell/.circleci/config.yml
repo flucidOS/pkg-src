@@ -1,0 +1,375 @@
+version: 2
+jobs:
+  build_jessie:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: kevinatk/aspell-testing:jessie
+    steps:
+    - checkout
+    - run: ./autogen
+    - run: ./sanity-check.sh
+    - run: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run: CXX=clang++-3.5 CC=clang-3.5 ./sanity-check.sh
+    - run: CXX=clang++-4.0 CC=clang-4.0 ./sanity-check.sh
+    - run: ./configure && make dist
+
+  build_16_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: circleci/buildpack-deps:16.04
+    steps:
+    #
+    # note: default gcc version is 4.4
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+        g++-4.9 g++-5
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run:
+        command: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    - run:
+        when: always
+        command: ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-4.9 CC=gcc-4.9 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-5 CC=gcc-5 ./sanity-check.sh
+
+
+  build_18_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-18.04
+    steps:
+    #
+    # note: default gcc version is 4.7
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+        g++-4.8 g++-5 g++-6 clang-3.9 clang-4.0 clang-5.0 clang-6.0
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run:
+        command: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    - run:
+        when: always
+        command: ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-4.8 CC=gcc-4.8 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-5 CC=gcc-5 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-6 CC=gcc-6 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-3.9 CC=clang-3.9 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-4.0 CC=clang-4.0 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-5.0 CC=clang-5.0 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-6.0 CC=clang-6.0 ./sanity-check.sh
+
+  build_20_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-20.04
+    steps:
+    #
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+         g++-7 g++-8 g++-9 g++-10 clang-6.0 clang-7 clang-8 clang-9 clang-10
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run:
+        command: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    - run:
+        when: always
+        command: ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-7 CC=gcc-7 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-8 CC=gcc-8 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-9 CC=gcc-9 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-10 CC=gcc-10 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-6.0 CC=clang-6.0 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-7 CC=clang-7 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-8 CC=clang-8 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-9 CC=clang-9 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-10 CC=clang-10 ./sanity-check.sh
+    - run:
+        when: always
+        command: ./config-opt && make -C build -j2
+
+  build_22_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-22.04
+    steps:
+    # note: default gcc is 11
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+         g++-9 g++-10 g++-11 g++-12 clang-11 clang-12 clang-13 clang-14 clang-15
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run:
+        command: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    - run:
+        when: always
+        command: ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-9 CC=gcc-9 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-10 CC=gcc-10 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-11 CC=gcc-11 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-12 CC=gcc-12 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-11 CC=clang-11 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-12 CC=clang-12 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-13 CC=clang-13 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-14 CC=clang-14 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-15 CC=clang-15 ./sanity-check.sh
+    - run:
+        when: always
+        command: ./config-opt && make -C build -j2
+
+  build_24_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-24.04
+    steps:
+    # Note: Default GCC in 24.04 is GCC 13
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+         g++-13 g++-14 g++-14-multilib clang-16 clang-17 clang-18 clang-19 
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    - run:
+        command: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    - run:
+        when: always
+        command: ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++ -m32" CC="gcc -m32" ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX="g++-14 -m32" CC="gcc-14 -m32" ./sanity-check.sh
+    # GCC
+    - run:
+        when: always
+        command: CXX=g++-13 CC=gcc-13 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=g++-14 CC=gcc-14 ./sanity-check.sh
+    # Clang
+    - run:
+        when: always
+        command: CXX=clang++-16 CC=clang-16 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-17 CC=clang-17 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-18 CC=clang-18 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-19 CC=clang-19 ./sanity-check.sh
+    - run:
+        when: always
+        command: ./config-opt && make -C build -j2
+
+  build_snapshots:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-24.04
+    steps:
+    - run:
+        name: Install Dependencies and Repositories
+        command: |
+          sudo apt-get -y update
+          sudo apt-get -y install software-properties-common wget
+          # GCC PPA for snapshots
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - run:
+        name: Install Compilers
+        command: |
+          sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext g++-multilib
+          # Install GCC Snapshot (Trunk)
+          sudo apt-get -y install gcc-snapshot
+          
+          # Download LLVM script to /tmp to avoid polluting the working directory
+          wget https://apt.llvm.org/llvm.sh -O /tmp/llvm.sh
+          chmod +x /tmp/llvm.sh
+          
+          # Install Clang Latest (20 and 21)
+          sudo /tmp/llvm.sh 20
+          sudo /tmp/llvm.sh 21 all
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    - run: ./autogen
+    - run:
+        when: on_fail
+        command: circleci-agent step halt
+    # GCC Snapshot Test
+    - run:
+        name: Sanity Check - GCC Snapshot
+        when: always
+        command: |
+          export PATH=/usr/lib/gcc-snapshot/bin:$PATH
+          CXX=/usr/lib/gcc-snapshot/bin/g++ CC=/usr/lib/gcc-snapshot/bin/gcc ./sanity-check.sh
+    # Clang Snapshot Test
+    - run:
+        when: always
+        command: CXX=clang++-20 CC=clang-20 ./sanity-check.sh
+    - run:
+        when: always
+        command: CXX=clang++-21 CC=clang-21 ./sanity-check.sh
+
+
+  tests_20_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-20.04
+    steps:
+    # Machine Setup
+    #
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext libipc-system-simple-perl
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run: ./autogen
+    - run: make -j2 -C test
+    - run: rm test/build/Makefile
+    - run: make SLOPPY=1 -j2 -C test
+
+  tests_22_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-22.04
+    steps:
+    # Machine Setup
+    #
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext libipc-system-simple-perl
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run: ./autogen
+    - run: make -j2 -C test
+    - run: rm test/build/Makefile
+    - run: make SLOPPY=1 -j2 -C test
+
+  tests_24_04:
+    working_directory: ~/GNUAspell/aspell
+    parallelism: 1
+    docker:
+    - image: cimg/base:current-24.04
+    steps:
+    # Machine Setup
+    #
+    - run: sudo apt-get -y update
+    - run: sudo apt-get -y install make autopoint texinfo libtool intltool bzip2 gettext libipc-system-simple-perl
+    - run: sudo apt-get -y purge aspell
+    - checkout
+    #
+    - run: ./autogen
+    - run: make -j2 -C test
+    - run: rm test/build/Makefile
+    - run: make SLOPPY=1 -j2 -C test
+
+workflows:
+  version: 2
+  sanity_check:
+    jobs:
+      - build_jessie
+      - build_16_04
+      - build_18_04
+      - build_20_04
+      - build_22_04
+      - build_24_04
+      - build_snapshots
+  tests:
+    jobs:
+      - tests_20_04
+      - tests_22_04
+      - tests_24_04
