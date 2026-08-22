@@ -1,0 +1,3 @@
+# See ./bootstrap for some helpful ~/.gitconfig or .git/config settings
+# needed for using these attributes effectively.
+*.texi* diff=texinfo
