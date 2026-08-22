@@ -1,0 +1,402 @@
+name: testsuite
+
+on:
+  push:
+    branches:
+      - "*"
+    tags-ignore:
+      - "*"
+  pull_request:
+
+jobs:
+  ubuntu:
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTHOR_TESTING: 1
+      AUTOMATED_TESTING: 1
+      RELEASE_TESTING: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || true
+      - name: Makefile.PL
+        run: perl Makefile.PL
+      - name: make test
+        run: make test
+
+  coverage:
+    needs: [ubuntu]
+    runs-on: ubuntu-latest
+
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTOMATED_TESTING: 1
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y lcov
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: Install coverage dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          install: "Devel::Cover"
+      - name: Install Codecov reporter
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          install: "Devel::Cover::Report::Codecov"
+      - name: Install JSON::MaybeXS
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          install: "JSON::MaybeXS"
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || true
+      - name: Build with coverage flags
+        run: |
+          perl Makefile.PL OPTIMIZE="-g -O0 --coverage -fprofile-arcs -ftest-coverage" \
+            LDDLFLAGS="-shared --coverage"
+          make
+      - name: Run tests with Devel::Cover
+        run: |
+          HARNESS_PERL_SWITCHES="-MDevel::Cover=-coverage,statement,branch,condition,subroutine,+ignore,^t/" \
+            make test
+      - name: Generate Perl coverage report
+        run: |
+          cover -report text
+          cover -report json
+      - name: Generate XS/C coverage report
+        run: |
+          find . -name '*.gcno' -o -name '*.gcda' | head -5
+          lcov --capture --directory . --output-file xs_coverage.lcov --rc lcov_branch_coverage=1 || true
+          lcov --remove xs_coverage.lcov '/usr/*' --output-file xs_coverage.lcov --rc lcov_branch_coverage=1 || true
+          lcov --list xs_coverage.lcov || true
+      - name: Upload Perl coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: cover_db/cover.json
+          flags: perl
+          name: perl-coverage
+        continue-on-error: true
+      - name: Upload XS/C coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: xs_coverage.lcov
+          flags: xs
+          name: xs-coverage
+        continue-on-error: true
+
+  no-lwp:
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTOMATED_TESTING: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: Remove LWP::UserAgent
+        run: |
+          sudo perl -MLWP::UserAgent -e'unlink $INC{"LWP/UserAgent.pm"}'
+          ! perl -MLWP::UserAgent -e1
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || true
+      - name: Makefile.PL
+        run: perl Makefile.PL
+      - name: make test
+        run: make test
+
+  asan:
+    needs: [ubuntu]
+    runs-on: ubuntu-latest
+
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTOMATED_TESTING: 1
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: Install libasan
+        run: sudo apt-get update && sudo apt-get install -y libasan8
+      - name: Build with AddressSanitizer
+        run: |
+          ASAN_LIB=$(gcc -print-file-name=libasan.so)
+          perl Makefile.PL OPTIMIZE="-g -fsanitize=address -fno-omit-frame-pointer" \
+            LDDLFLAGS="-shared -fsanitize=address"
+          make
+      - name: Run tests under ASan
+        run: |
+          ASAN_LIB=$(gcc -print-file-name=libasan.so)
+          ASAN_OPTIONS="detect_leaks=0:halt_on_error=1" \
+            LD_PRELOAD="$ASAN_LIB" \
+            make test
+
+  disttest:
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTHOR_TESTING: 1
+      AUTOMATED_TESTING: 1
+      RELEASE_TESTING: 1
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || true
+      - name: Makefile.PL
+        run: perl Makefile.PL
+      - name: make disttest
+        run: make disttest
+
+  downstream:
+    needs: [ubuntu]
+    runs-on: ubuntu-latest
+
+    name: "downstream ${{ matrix.module }}"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - 'XML::XPath'
+          - 'XML::DOM'
+          - 'XML::Twig'
+
+    env:
+      PERL_USE_UNSAFE_INC: 1
+      AUTOMATED_TESTING: 1
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          cpanfile: "cpanfile"
+      - name: Install XML-Parser from checkout
+        run: |
+          perl Makefile.PL
+          make
+          sudo make install
+      - name: Install downstream deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libxml-perl libpath-tiny-perl
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          install: ${{ matrix.module }}
+          tests: true
+          verbose: true
+
+  perl-versions:
+    runs-on: ubuntu-latest
+    needs: [ubuntu, disttest]
+    name: List Perl versions
+    outputs:
+      perl-versions: ${{ steps.action.outputs.perl-versions }}
+    steps:
+      - id: action
+        uses: perl-actions/perl-versions@v1
+        with:
+          since-perl: 5.8
+          with-devel: true
+
+  linux:
+    name: "Perl ${{ matrix.perl-version }}"
+    needs: [perl-versions]
+    runs-on: ubuntu-latest
+
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTHOR_TESTING: 1
+      AUTOMATED_TESTING: 1
+      RELEASE_TESTING: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        perl-version: ${{ fromJson (needs.perl-versions.outputs.perl-versions) }}
+
+    container:
+      image: perldocker/perl-tester:${{ matrix.perl-version }}
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install expat
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends libexpat1-dev
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || dpkg -s libexpat1-dev 2>/dev/null | grep Version || true
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          sudo: false
+          cpanfile: "cpanfile"
+      - run: perl Makefile.PL
+      - run: make
+      - run: make test
+
+  BSDs:
+    needs: [ubuntu, linux]
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: freebsd
+            version: '14.2'
+            pkginstall: pkg install -y expat p5-ExtUtils-MakeMaker
+
+          - name: openbsd
+            version: '7.6'
+            pkginstall: pkg_add expat
+
+          - name: netbsd
+            version: '10.1'
+            pkginstall: pkgin -y install perl expat || true
+
+    steps:
+      - uses: actions/checkout@v6
+        timeout-minutes: 5
+
+      - name: Test on ${{ matrix.os.name }}
+        uses: cross-platform-actions/action@v1
+        timeout-minutes: 15
+        with:
+          operating_system: ${{ matrix.os.name }}
+          version: ${{ matrix.os.version }}
+          shell: bash
+          run: |
+            sudo ${{ matrix.os.pkginstall }}
+            pkg-config --modversion expat 2>/dev/null || true
+            curl -L https://cpanmin.us | sudo perl - --notest --installdeps --with-configure .
+            perl Makefile.PL
+            make
+            prove -wlvmb t
+
+  fedora:
+    needs: [ubuntu, linux]
+    runs-on: ubuntu-latest
+
+    container:
+      image: fedora:43
+
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTOMATED_TESTING: 1
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        run: |
+          dnf -y install perl expat-devel git make gcc patch
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || rpm -q expat-devel || true
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          sudo: false
+          cpanfile: "cpanfile"
+      - name: Makefile.PL
+        run: perl Makefile.PL
+      - name: make
+        run: make
+      - name: make test
+        run: make test
+
+  macOS:
+    needs: [ubuntu, linux]
+    runs-on: macos-latest
+
+    env:
+      PERL_USE_UNSAFE_INC: 0
+      AUTHOR_TESTING: 1
+      AUTOMATED_TESTING: 1
+      RELEASE_TESTING: 1
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Perl
+        run: brew install perl
+      - name: expat version
+        run: pkg-config --modversion expat 2>/dev/null || true
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          sudo: false
+          cpanfile: "cpanfile"
+      - run: perl Makefile.PL
+      - run: make
+      - run: make test
+
+  windows:
+    needs: [ubuntu, linux]
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Perl
+        run: |
+          choco install strawberryperl
+          echo @"
+          C:\strawberry\c\bin
+          C:\strawberry\perl\site\bin
+          C:\strawberry\perl\bin
+          "@ |
+            Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: perl -V
+        run: perl -V
+      - name: Install Dependencies
+        uses: perl-actions/install-with-cpm@v2
+        with:
+          sudo: false
+          cpanfile: "cpanfile"
+      - name: perl Makefile.PL
+        run: perl Makefile.PL
+      - name: make
+        run: make
+      - name: Run Tests
+        run: make test

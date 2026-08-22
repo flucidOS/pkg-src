@@ -1,0 +1,29 @@
+\.gitignore
+\.perltidyrc
+\.travis.yml
+cpanfile
+\.git/
+^MANIFEST.bak
+^MYMETA
+/MYMETA
+^Makefile$
+^Makefile\.old$
+\.github/
+^Expat/Makefile$
+^Expat/Makefile\.old$
+^CLAUDE.md$
+^codecov\.yml$
+
+# Build artifacts
+^blib/
+^pm_to_blib$
+\.o$
+\.so$
+\.bs$
+\.c$
+
+# Coverage artifacts
+^cover_db/
+
+# OS artifacts
+\.DS_Store$
