@@ -1,0 +1,106 @@
+name: C/C++ CI
+
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      ASAN_FLAGS: "-fsanitize=address -fsanitize=undefined"
+
+    steps:
+    - uses: actions/checkout@v6
+      with: { submodules: true }
+    - name: Install dependencies
+      run: sudo apt-get -y install libglib2.0-dev libaspell-dev hspell libhunspell-dev libvoikko-dev voikko-fi aspell-en libunittest++-dev hunspell-fr groff doxygen graphviz valac pkg-config libltdl-dev
+    - name: Install nuspell
+      run: |
+        sudo apt-get -y install libicu-dev ninja-build
+        wget https://github.com/nuspell/nuspell/archive/refs/tags/v5.1.0.tar.gz -O - | tar -xz
+        cmake -S nuspell-* -B nuspell-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=0
+        cmake --build nuspell-build
+        sudo cmake --install nuspell-build
+        rm -rf nuspell-*
+        sudo ldconfig
+    - name: Bootstrap (gnulib and autoreconf)
+      run: ./bootstrap
+    - name: configure
+      run: ./configure --enable-relocatable
+      env:
+        CFLAGS: -g ${{ env.ASAN_FLAGS }}
+        CXXFLAGS: -g ${{ env.ASAN_FLAGS }}
+        LDFLAGS: ${{ env.ASAN_FLAGS }}
+    - name: make
+      run: make --jobs=`nproc`
+    - name: make check
+      run: make check --jobs=`nproc` || ( cat program-tests/test-suite.log tests/test-suite.log && exit 1 )
+    - name: make distcheck
+      # normal build is with ASAN, distcheck is without ASAN. Both are covered.
+      run: make distcheck --jobs=`nproc` || ( cat enchant-*/_build/sub/program-tests/test-suite.log tests/test-suite.log && exit 1 )
+    - name: non-relocatable build
+      run: make clean && ./configure && make
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v6
+      with: { submodules: true }
+    - name: Install dependencies
+      run: |
+        brew install automake vala pkg-config dbus-glib groff hspell hunspell libvoikko nuspell unittest-cpp coreutils doxygen graphviz
+    - name: Bootstrap (gnulib and autoreconf)
+      run: PATH="$(brew --prefix)/opt/m4/bin:${PATH}" ./bootstrap
+    - name: configure
+      # Note: aspell should work on macOS, but has been removed because one of
+      # the tests fails; see https://github.com/GNUAspell/aspell/issues/555
+      run: ./configure --enable-relocatable --without-aspell
+    - name: make
+      run: make --jobs=`nproc`
+    - name: make check
+      run: make check --jobs=`nproc` || ( cat program-tests/test-suite.log tests/test-suite.log && exit 1 )
+    - name: make distcheck
+      run: make distcheck --jobs=`nproc` DISTCHECK_CONFIGURE_FLAGS="--without-aspell" || ( cat enchant-*/_build/sub/program-tests/test-suite.log tests/test-suite.log && exit 1 )
+      
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    strategy:
+      matrix:
+        include:
+        - { sys: mingw64, env: x86_64 }
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        release: false
+        msystem: ${{matrix.sys}}
+        install: >-
+          patch git groff
+          mingw-w64-${{matrix.env}}-autotools
+          mingw-w64-${{matrix.env}}-pkg-config
+          mingw-w64-${{matrix.env}}-crt
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-vala
+          mingw-w64-${{matrix.env}}-glib2
+          mingw-w64-${{matrix.env}}-hunspell
+          mingw-w64-${{matrix.env}}-hunspell-en
+          mingw-w64-${{matrix.env}}-nuspell
+          mingw-w64-${{matrix.env}}-unittest-cpp
+          mingw-w64-${{matrix.env}}-doxygen
+          mingw-w64-${{matrix.env}}-graphviz
+    - uses: actions/checkout@v6
+      with: { submodules: true }
+    - name: Bootstrap (gnulib and autoreconf)
+      run: ./bootstrap
+    - name: configure
+      # set lt_cv_deplibs_check_method to pass_all to work around linker error regarding -luuid
+      # similar issue as https://github.com/msys2/MINGW-packages/issues/16836
+      run: lt_cv_deplibs_check_method='pass_all' ./configure --enable-relocatable
+    - name: make
+      run: make --jobs=`nproc`
+    - name: make check
+      run: make check --jobs=`nproc` || ( cat program-tests/test-suite.log tests/test-suite.log && exit 1 )
+    - name: make distcheck
+      run: make distcheck --jobs=`nproc` || ( cat enchant-*/_build/sub/program-tests/test-suite.log tests/test-suite.log && exit 1 )

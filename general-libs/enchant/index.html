@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<!--responsive layout-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!--bootstrap-->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+<title>Enchant</title>
+</head>
+<body>
+<div class="content container my-5">
+<h1>Enchant</h1>
+<p>by Dom Lachowicz</p>
+<p>Current maintainer: Reuben Thomas</p>
+
+<hr />
+
+<h2><a href="https://github.com/rrthomas/enchant/releases">Releases</a></h2>
+
+<h2>What is Enchant?</h2>
+
+<p>Enchant is a library (and command-line program) that wraps a number of
+different spelling libraries and programs with a consistent interface. By
+using Enchant, you can use a wide range of spelling libraries, including
+some specialised for particular languages, without needing to program to
+each library's interface. If it's not convenient to call a C library, you
+can access most of Enchant's functionality via the enchant program, which
+communicates over a pipe, like Ispell, and is indeed Ispell-compatible.</p>
+
+<h2>Backends</h2>
+
+<p>Enchant is capable of having multiple backends loaded at once. Currently, Enchant has the following backends:</p>
+
+<ul>
+<li><a href="https://hunspell.github.io/">Hunspell</a> (used by many other programs, including Firefox and Thunderbird)</li>
+<li><a href="https://nuspell.github.io/">Nuspell</a> (newest spell checker to be used by many other programs, including Firefox and Thunderbird)</li>
+<li><a href="http://aspell.net/">GNU Aspell</a> (Ispell replacement)</li>
+<li><a href="http://hspell.ivrix.org.il/">Hspell</a> (Hebrew)</li>
+<li><a href="https://voikko.puimula.org/">Voikko</a> (Finnish)</li>
+<li><a href="https://code.google.com/archive/p/zemberek/">Zemberek</a> (Turkish)</li>
+<li><a href="https://developer.apple.com/">AppleSpell</a> (macOS)</li>
+</ul>
+
+<h2>Getting Enchant</h2>
+
+<p>You can get Enchant from <a
+href="https://github.com/rrthomas/enchant">GitHub</a>.</p>
+
+<p>Older versions are still available from the <a
+href="http://www.nl.abisource.com/downloads/enchant/">AbiSource website</a>.</p>
+
+<ul>
+  <li><a href="https://github.com/rrthomas/enchant/blob/master/doxygen/html/index.html">C/C++ API</a></li>
+  <li>You can <a href="https://github.com/rrthomas/enchant">browse Enchant's source code</a></li>
+</ul>
+
+<h2>User configuration</h2>
+
+See <a href="lib/enchant.html">enchant(5)</a>.
+
+<h2>Command-line programs</h2>
+
+Enchant comes with a couple of command-line utilities:
+
+<dl>
+  <dt><a href="src/enchant-lsmod-2.html">enchant-lsmod(1)</a></dt><dd>Gives
+  information about the available dictionaries.</dd>
+  <dt><a href="src/enchant-2.html">enchant(1)</a></dt><dd>Check the spelling of some text. This program is compatible with the ispell utility, but is for non-interactive use only.</dd>
+</dl>
+
+<h2>Programs using Enchant</h2>
+
+<p>Enchant is used by <a href="https://www.gnu.org/software/emacs/">GNU
+Emacs</a> (as of version 27.1), <a href="https://github.com/AbiWord/abiword/">AbiWord</a>,
+<a href="https://www.lyx.org">LyX</a>, and,
+via <a href="https://wiki.gnome.org/Projects/gspell">gspell</a>
+and <a href="http://gtkspell.sourceforge.net">GtkSpell</a>, a number of Gtk
+and GNOME applications.</p>
+
+<p>Backends for additional spell-checking systems are welcomed.</p>
+
+<h2>Compatibility and bindings</h2>
+
+<p>Enchant is written in C99, C++11, and Vala, which compiles to C, and
+should therefore work on most modern operating systems; other than the
+standard libraries, it requires
+only <a href="https://wiki.gnome.org/Projects/GLib">GLib</a>. The build
+system uses GNU Autotools, and therefore works with most compilers,
+including Microsoft Visual C and XCode.</p>
+
+<p>Bindings are available to many other languages:</p>
+
+<ul>
+  <li><a href="https://github.com/rfk/pyenchant/">Python</a></li>
+  <li><a href="https://crates.io/crates/enchant">Rust</a></li>
+  <li><a href="https://github.com/hermanschaaf/enchant">Go</a></li>
+  <li><a href="https://github.com/tlikonen/cl-enchant">Common Lisp</a></li>
+  <li><a herf="https://vala.dev">Vala</a>: built in!</li>
+</ul>
+
+<p>All inputs and outputs are in UTF-8 encoding. Language tags use
+the familiar ISO standards, and take the form of "xx_YY"
+(language_LOCALE), where the locale ("_YY") portion is optional, but
+encouraged.</p>
+
+<h2>Bugs and development</h2>
+
+<p>Please use <a
+href="https://github.com/rrthomas/enchant/issues/">Github issue
+    tracker</a> if possible to file bugs, offer patches or request new features.
+  Even better, submit a <a href="https://github.com/rrthomas/enchant/pulls/">Pull Request</a>!
+  Alternatively, feel free to send a message to the abiword-devel mailing list.
+</p>
+
+<p>Enchant is quite mature, but it still lacks features. Some work has
+already been done as part of past Google Summer of Code projects that has
+not yet been integrated into releases (see the issue tracker). Some
+functionality available in the underlying spelling libraries but not yet
+supported by Enchant could also usefully be added to Enchant's APIs.</p>
+
+<p>If you'd like to contribute to Enchant, please read the file <a href="https://github.com/rrthomas/enchant/blob/master/HACKING"><code>HACKING</code></a>.
+
+<h2>License</h2>
+
+<p>Enchant is licensed under the LGPL license, with an
+  <a href="https://github.com/rrthomas/enchant/blob/e61d5e73d4e2e410349508c08cfcf17d330503d2/src/enchant.h#L19-L28">exception</a> so that non-free plugin backends
+can be loaded and used by Enchant. Thus, it is possible to use
+the native spell checkers on proprietary platforms (macOS, MS Office, …).</p>
+
+<h2>What's in a Name?</h2>
+
+<p>The definition of "Enchant" is roughly "to cast a spell". So, it's a pun!</p>
+
+</div>
+<table style="text-align: left; background-color: rgb(244, 244, 244); width: 100%;" width="100%" border="0" cellspacing="2" cellpadding="2"><tbody><tr><td style="font-size: 8pt; align: center;"><div class="copyright">Copyright (C) 1998-2024, the AbiSource community.  All rights reserved.<br />
+AbiSource and AbiWord are <a href="/information/license/tm_guide.phtml">trademarks</a> of Dom Lachowicz.  All other product names, company names, or logos cited herein are property of their respective owners.</div></td></tr></tbody></table>
+<!--bootstrap and its dependencies-->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+</body>
+</html>
