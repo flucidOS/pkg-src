@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=IBus
+Comment=The daemon of IBus
+Exec=ibus
+Icon=ibus
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Applications;Utility;

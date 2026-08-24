@@ -1,0 +1,150 @@
+# Translation of ISO 3166-3 to Central Khmer
+# Codes for the representation of names of countries and their subdivisions
+# Part 3: Code for formerly used names of countries
+# .
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# .
+# SPDX-FileCopyrightText: 2006 auk piseth <piseth_dv@khmeros.info>
+# SPDX-FileCopyrightText: 2006 eng vannak <evannak@khmeros.info>
+# SPDX-FileCopyrightText: 2006, 2010 Khoem Sokhem <khoemsokhem@khmeros.info>
+msgid ""
+msgstr ""
+"Project-Id-Version: iso_3166-3\n"
+"Report-Msgid-Bugs-To: https://salsa.debian.org/iso-codes-team/iso-codes/"
+"issues\n"
+"POT-Creation-Date: 2025-11-18 11:09+0100\n"
+"PO-Revision-Date: 2010-06-16 14:55+0700\n"
+"Last-Translator: Khoem Sokhem <khoemsokhem@khmeros.info>\n"
+"Language-Team: Khmer <support@khmeros.info>\n"
+"Language: km\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"X-Language: km-KH\n"
+
+#. Name for AIDJ
+msgid "French Afars and Issas"
+msgstr "អ៊ីសាក់ និង​អាហ្វា​របស់បារាំង"
+
+#. Name for ANHH
+msgid "Netherlands Antilles"
+msgstr "អង់ទីយ៍​ហុល្លង់"
+
+#. Name for BQAQ
+msgid "British Antarctic Territory"
+msgstr "អាណាចក្រ​​​​អង់តាកទិច ចក្រភព​អង់គ្លេស"
+
+#. Name for BUMM
+msgid "Burma, Socialist Republic of the Union of"
+msgstr "សាធារណៈរដ្ឋ​ភូមា"
+
+#. Name for BYAA
+msgid "Byelorussian SSR Soviet Socialist Republic"
+msgstr "សាធារណៈរដ្ឋ​សង្គមនិយម​សូវៀត SSR បៃឡូរ៉ុសៀន"
+
+#. Name for CSHH
+msgid "Czechoslovakia, Czechoslovak Socialist Republic"
+msgstr "សាធារណៈ​រដ្ឋ​សង្គមនិយម​ឆេកូស្លូវ៉ាគី"
+
+#. Name for CSXX
+msgid "Serbia and Montenegro"
+msgstr "ស៊ែរប៊ី និង​មុនតែនេគ្រូ"
+
+#. Name for CTKI
+msgid "Canton and Enderbury Islands"
+msgstr "កោះ​កាតុន និង​អ៊ីនឌឺ​បូរី"
+
+#. Name for DDDE
+msgid "German Democratic Republic"
+msgstr "សាធារណ​រដ្ឋ​ប្រជាធិបតេយ្យ​​ប្រជាធិបតេយ្យ​យេមែន"
+
+#. Name for DYBJ
+msgid "Dahomey"
+msgstr "ដា​ហូម៉ី"
+
+#. Name for FQHH
+msgid "French Southern and Antarctic Territories"
+msgstr "អាណាចក្រ​ខាង​​អង់តាទិក និង​ភាគ​ខាង​ត្បូង​បារាំង"
+
+#. Name for FXFR
+msgid "France, Metropolitan"
+msgstr "បារាំង មេត្រូប៉ូលីតង់"
+
+#. Name for GEHH
+msgid "Gilbert and Ellice Islands"
+msgstr "កោះ​អ៊ីឡៃ និង​ហ្គីលប៊ឺត"
+
+#. Name for HVBF
+msgid "Upper Volta, Republic of"
+msgstr "អាប់ភើ​វ៉ូលតា​ សាធារណរដ្ឋ​នៃ"
+
+#. Name for JTUM
+msgid "Johnston Island"
+msgstr "កោះ​ចនស្តុន"
+
+#. Name for MIUM
+msgid "Midway Islands"
+msgstr "កោះ​​មីតវ៉េ"
+
+#. Name for NHVU
+msgid "New Hebrides"
+msgstr "ហេប្រ៊ីត​ថ្មី"
+
+#. Name for NQAQ
+msgid "Dronning Maud Land"
+msgstr "ឌ្រូនីង​ម៉ាត់​ឡែន"
+
+#. Name for NTHH
+msgid "Neutral Zone"
+msgstr "តំបន់​ញូត្រាល់"
+
+#. Name for PCHH
+msgid "Pacific Islands (trust territory)"
+msgstr "កោះ​ប៉ាស៊ីហ្វិក (អាណាចកត្រ​ពិតប្រាកដ)"
+
+#. Name for PUUM
+msgid "US Miscellaneous Pacific Islands"
+msgstr "កោះ​ប៉ាស៊ីហ្វិក​ផ្សេងៗ​របស់​សហរដ្ឋ​អាមេរិក"
+
+#. Name for PZPA
+msgid "Panama Canal Zone"
+msgstr "តំបន់​ខាណល​ប៉ាណាម៉ា"
+
+#. Name for RHZW
+msgid "Southern Rhodesia"
+msgstr "រ៉ូដេស៊ី​ខាង​ត្បូង"
+
+#. Name for SKIN
+msgid "Sikkim"
+msgstr "សីគីម"
+
+#. Name for SUHH
+msgid "USSR, Union of Soviet Socialist Republics"
+msgstr "សាធារណៈរដ្ឋ​សង្គមនិយម​សូវៀត USSR"
+
+#. Name for TPTL
+msgid "East Timor"
+msgstr "ទីម័រ​ខាង​កើត"
+
+#. Name for VDVN
+msgid "Viet-Nam, Democratic Republic of"
+msgstr "វៀតណាម សាធារណ​រដ្ឋ​ប្រជាមានិត​ប្រជាធិបតេយ្យ​​នៃ"
+
+#. Name for WKUM
+msgid "Wake Island"
+msgstr "កោះ​វេក"
+
+#. Name for YDYE
+msgid "Yemen, Democratic, People's Democratic Republic of"
+msgstr "យេមែន សាធារណ​រដ្ឋ​ប្រជាមានិត​ប្រជាធិបតេយ្យ​​នៃ"
+
+#. Name for YUCS
+#, fuzzy
+#| msgid "Yugoslavia, Socialist Federal Republic of"
+msgid "Yugoslavia, (Socialist) Federal Republic of"
+msgstr "សាធារណៈរដ្ឋ​សម្ព័ន្ធ​សង្គមនិយម​យូហ្គូស្លាវី"
+
+#. Name for ZRCD
+msgid "Zaire, Republic of"
+msgstr "ហ្សៃ សាធារណរដ្ឋ​នៃ"

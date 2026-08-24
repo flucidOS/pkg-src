@@ -1,0 +1,22 @@
+2025-09-29  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* host-cpu-c-abi.m4: New file, from gettext-0.26.
+	* iconv.m4: Upgrade to gettext-0.26.
+	* lib-ld.m4: New file, from gettext-0.26.
+	* lib-link.m4: New file, from gettext-0.26.
+	* lib-prefix.m4: New file, from gettext-0.26.
+	* Makefile.am (EXTRA_DIST): Add the new files.
+
+2010-04-14  Werner Koch  <wk@g10code.com>
+
+	* pkg.m4: New.
+
+2004-12-22  Werner Koch  <wk@g10code.com>
+
+	* gtk.m4, glib.m4, qt.m4: Fixed for automake 1.9
+
+2004-09-27  Marcus Brinkmann  <marcus@g10code.de>
+
+	* curses.m4, glib.m4, gtk.m4, iconv.m4, qt.m4: New files.
+
+

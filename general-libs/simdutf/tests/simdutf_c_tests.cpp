@@ -1,0 +1,368 @@
+#include <tests/helpers/test.h>
+#include <tests/helpers/utf16.h>
+#include <cstring>
+#include "simdutf_c.h"
+
+const char *hello = "hello";
+const size_t hello_len = 5;
+
+TEST(validate_utf8_c) {
+  bool ok = simdutf_validate_utf8(hello, hello_len);
+  ASSERT_TRUE(ok);
+  simdutf_result r = simdutf_validate_utf8_with_errors(hello, hello_len);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(r.count, hello_len);
+}
+
+TEST(convert_utf8_to_utf16_c) {
+  char16_t out[16];
+  size_t n = simdutf_convert_utf8_to_utf16(hello, hello_len, out);
+  ASSERT_EQUAL(n, hello_len);
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char16_t(hello[i]));
+  }
+}
+
+TEST(convert_utf8_to_utf32_c) {
+  char32_t out[16];
+  size_t n = simdutf_convert_utf8_to_utf32(hello, hello_len, out);
+  ASSERT_EQUAL(n, hello_len);
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char32_t(hello[i]));
+  }
+}
+
+TEST(count_utf8_c) {
+  size_t cnt = simdutf_count_utf8(hello, hello_len);
+  ASSERT_EQUAL(cnt, hello_len);
+}
+
+TEST(find_c) {
+  const char *f = simdutf_find(hello, hello + hello_len, 'e');
+  ASSERT_EQUAL(f, hello + 1);
+}
+
+TEST(base64_c) {
+  const char *b64 = "aGVsbG8="; // "hello"
+  char binout[16] = {0};
+  size_t outlen = sizeof(binout);
+  simdutf_result br = simdutf_base64_to_binary_safe(
+      b64, strlen(b64), binout, &outlen, SIMDUTF_BASE64_DEFAULT,
+      SIMDUTF_LAST_CHUNK_LOOSE, true);
+  ASSERT_EQUAL(br.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(outlen, hello_len);
+  ASSERT_TRUE(std::memcmp(binout, "hello", hello_len) == 0);
+
+  char b64out[32] = {0};
+  size_t b64len = simdutf_binary_to_base64("hello", hello_len, b64out,
+                                           SIMDUTF_BASE64_DEFAULT);
+  ASSERT_TRUE(b64len >= 8);
+}
+
+TEST(ascii_and_detect_c) {
+  ASSERT_TRUE(simdutf_validate_ascii(hello, hello_len));
+  simdutf_result r = simdutf_validate_ascii_with_errors(hello, hello_len);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SUCCESS);
+
+  simdutf_encoding_type et = simdutf_autodetect_encoding(hello, hello_len);
+  ASSERT_EQUAL(et, SIMDUTF_ENCODING_UTF8);
+  int encs = simdutf_detect_encodings(hello, hello_len);
+  ASSERT_TRUE(encs >= 0);
+}
+
+TEST(lengths_and_conversions_c) {
+  char latin_out[8] = {0};
+  size_t latin_to_utf8 = simdutf_convert_latin1_to_utf8("abc", 3, latin_out);
+  ASSERT_EQUAL(latin_to_utf8, 3);
+
+  // prepare a UTF-16 sample
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  size_t u16len = simdutf_utf8_length_from_utf16(u16, 5);
+
+  // convert utf16->utf8 safe
+  char out8[8] = {0};
+  size_t safelen =
+      simdutf_convert_utf16_to_utf8_safe(u16, 5, out8, sizeof(out8));
+  ASSERT_EQUAL(safelen, u16len);
+
+  // convert with errors
+  simdutf_result cr = simdutf_convert_utf16_to_utf8_with_errors(u16, 5, out8);
+  ASSERT_EQUAL(cr.error, SIMDUTF_ERROR_SUCCESS);
+}
+
+TEST(counts_and_find_utf16_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  size_t c16 = simdutf_count_utf16(u16, 5);
+  ASSERT_EQUAL(c16, 5);
+
+  const char16_t *f16 = simdutf_find_utf16(u16, u16 + 5, u'e');
+  if (f16 == nullptr) {
+    ASSERT_TRUE(false); // should not be null
+  } else {
+    if (f16 != u16 + 1) {
+      ASSERT_TRUE(false); // should point to second character
+    }
+  }
+}
+
+TEST(validate_utf16_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  bool ok = simdutf_validate_utf16(u16, 5);
+  ASSERT_TRUE(ok);
+  simdutf_result r = simdutf_validate_utf16_with_errors(u16, 5);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(r.count, 5);
+}
+
+TEST(validate_utf32_c) {
+  char32_t u32[5] = {U'h', U'e', U'l', U'l', U'o'};
+  bool ok = simdutf_validate_utf32(u32, 5);
+  ASSERT_TRUE(ok);
+  simdutf_result r = simdutf_validate_utf32_with_errors(u32, 5);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(r.count, 5);
+}
+
+TEST(convert_utf16_to_utf8_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  char out[8] = {0};
+  size_t n = simdutf_convert_utf16_to_utf8(u16, 5, out);
+  ASSERT_EQUAL(n, 5);
+  ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
+}
+
+TEST(convert_utf32_to_utf8_c) {
+  char32_t u32[5] = {U'h', U'e', U'l', U'l', U'o'};
+  char out[8] = {0};
+  size_t n = simdutf_convert_utf32_to_utf8(u32, 5, out);
+  ASSERT_EQUAL(n, 5);
+  ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
+}
+
+TEST(convert_utf16_to_utf32_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  char32_t out[8] = {0};
+  size_t n = simdutf_convert_utf16_to_utf32(u16, 5, out);
+  ASSERT_EQUAL(n, 5);
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char32_t(u16[i]));
+  }
+}
+
+TEST(convert_utf8_to_latin1_c) {
+  const char *input = "hello";
+  char out[8] = {0};
+  size_t n = simdutf_convert_utf8_to_latin1(input, 5, out);
+  ASSERT_EQUAL(n, 5);
+  ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
+}
+
+TEST(convert_latin1_to_utf16_c) {
+  const char *input = "abc";
+  char16_t out[8] = {0};
+  size_t n = simdutf_convert_latin1_to_utf16(input, 3, out);
+  ASSERT_EQUAL(n, 3);
+  for (size_t i = 0; i < n; i++) {
+    ASSERT_EQUAL(out[i], char16_t(input[i]));
+  }
+}
+
+TEST(to_well_formed_utf16_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  char16_t out[8] = {0};
+  simdutf_to_well_formed_utf16(u16, 5, out);
+  // Since input is valid, output should be the same
+  for (size_t i = 0; i < 5; i++) {
+    ASSERT_EQUAL(out[i], u16[i]);
+  }
+}
+
+TEST(invalid_utf8_c) {
+  const char *invalid = "\xff\xfe"; // invalid UTF-8
+  bool ok = simdutf_validate_utf8(invalid, 2);
+  ASSERT_FALSE(ok);
+  simdutf_result r = simdutf_validate_utf8_with_errors(invalid, 2);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_HEADER_BITS);
+}
+
+TEST(invalid_utf8_conversion_results_c) {
+  const char *invalid = "\xff";
+
+  char16_t out16[4] = {0};
+  simdutf_result r16 =
+      simdutf_convert_utf8_to_utf16_with_errors(invalid, 1, out16);
+  ASSERT_EQUAL(r16.error, SIMDUTF_ERROR_HEADER_BITS);
+  ASSERT_EQUAL(r16.count, size_t(0));
+
+  char32_t out32[4] = {0};
+  simdutf_result r32 =
+      simdutf_convert_utf8_to_utf32_with_errors(invalid, 1, out32);
+  ASSERT_EQUAL(r32.error, SIMDUTF_ERROR_HEADER_BITS);
+  ASSERT_EQUAL(r32.count, size_t(0));
+}
+
+TEST(invalid_utf16_conversion_result_c) {
+  const char16_t invalid[] = {u'A', char16_t(0xD800), u'B'};
+  char out[16] = {0};
+  simdutf_result r = simdutf_convert_utf16_to_utf8_with_errors(invalid, 3, out);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_SURROGATE);
+  ASSERT_EQUAL(r.count, size_t(1));
+}
+
+TEST(invalid_utf32_conversion_result_c) {
+  const char32_t invalid[] = {U'A', char32_t(0x110000), U'B'};
+  char out[16] = {0};
+  simdutf_result r = simdutf_convert_utf32_to_utf8_with_errors(invalid, 3, out);
+  ASSERT_EQUAL(r.error, SIMDUTF_ERROR_TOO_LARGE);
+  ASSERT_EQUAL(r.count, size_t(1));
+}
+
+TEST(base64_utf16_c) {
+  const char16_t *b64_u16 = u"aGVsbG8="; // "hello" in base64, as UTF-16
+  char binout[16] = {0};
+  size_t outlen = sizeof(binout);
+  simdutf_result br = simdutf_base64_to_binary_safe_utf16(
+      b64_u16, 8, binout, &outlen, SIMDUTF_BASE64_DEFAULT,
+      SIMDUTF_LAST_CHUNK_LOOSE, true);
+  ASSERT_EQUAL(br.error, SIMDUTF_ERROR_SUCCESS);
+  ASSERT_EQUAL(outlen, hello_len);
+  ASSERT_TRUE(std::memcmp(binout, "hello", hello_len) == 0);
+}
+
+TEST(base64_length_helpers_c) {
+  size_t maxbin = simdutf_maximal_binary_length_from_base64("aGVsbG8=", 8);
+  ASSERT_TRUE(maxbin >= 5);
+
+  size_t b64len = simdutf_base64_length_from_binary(5, SIMDUTF_BASE64_DEFAULT);
+  ASSERT_TRUE(b64len >= 8);
+
+  size_t with_lines = simdutf_base64_length_from_binary_with_lines(
+      5, SIMDUTF_BASE64_DEFAULT, 4);
+  ASSERT_TRUE(with_lines >= b64len);
+
+  char out[64] = {0};
+  size_t bl = simdutf_binary_to_base64_with_lines("hello", 5, out, 4,
+                                                  SIMDUTF_BASE64_DEFAULT);
+  ASSERT_TRUE(bl > 0);
+}
+
+TEST(length_calculations_c) {
+  // Test utf8_length_from_utf16
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  size_t utf8_len = simdutf_utf8_length_from_utf16(u16, 5);
+  ASSERT_EQUAL(utf8_len, 5);
+
+  // Test utf16_length_from_utf8
+  const char *utf8 = "hello";
+  size_t utf16_len = simdutf_utf16_length_from_utf8(utf8, 5);
+  ASSERT_EQUAL(utf16_len, 5);
+
+  // Test utf32_length_from_utf8
+  size_t utf32_len = simdutf_utf32_length_from_utf8(utf8, 5);
+  ASSERT_EQUAL(utf32_len, 5);
+
+  // Test latin1_length_from_utf8
+  size_t latin1_len = simdutf_latin1_length_from_utf8(utf8, 5);
+  ASSERT_EQUAL(latin1_len, 5);
+}
+
+TEST(convert_utf16_c) {
+  char16_t u16[5] = {u'h', u'e', u'l', u'l', u'o'};
+  char out[8] = {0};
+  size_t n = simdutf_convert_utf16_to_utf8(u16, 5, out);
+  ASSERT_EQUAL(n, 5);
+  ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
+}
+
+// U+FFFD encoded in UTF-8.
+static const char fffd[3] = {char(0xEF), char(0xBF), char(0xBD)};
+
+TEST(convert_utf16le_to_utf8_with_replacement_c) {
+  // 'A', unpaired high surrogate, 'B', unpaired low surrogate, valid pair
+  // (U+1F600). to_utf16le stores the code units little-endian whatever the
+  // host byte order is.
+  const char16_t input[] = {to_utf16le(u'A'),
+                            to_utf16le(char16_t(0xD800)),
+                            to_utf16le(u'B'),
+                            to_utf16le(char16_t(0xDC00)),
+                            to_utf16le(char16_t(0xD83D)),
+                            to_utf16le(char16_t(0xDE00))};
+  const size_t length = sizeof(input) / sizeof(input[0]);
+
+  char out[32] = {0};
+  size_t n =
+      simdutf_convert_utf16le_to_utf8_with_replacement(input, length, out);
+  // 'A' + FFFD + 'B' + FFFD + 4-byte U+1F600
+  ASSERT_EQUAL(n, size_t(1 + 3 + 1 + 3 + 4));
+  ASSERT_EQUAL(out[0], 'A');
+  ASSERT_TRUE(std::memcmp(out + 1, fffd, 3) == 0);
+  ASSERT_EQUAL(out[4], 'B');
+  ASSERT_TRUE(std::memcmp(out + 5, fffd, 3) == 0);
+  ASSERT_EQUAL(uint8_t(out[8]), uint8_t(0xF0));
+  ASSERT_EQUAL(uint8_t(out[9]), uint8_t(0x9F));
+  ASSERT_EQUAL(uint8_t(out[10]), uint8_t(0x98));
+  ASSERT_EQUAL(uint8_t(out[11]), uint8_t(0x80));
+
+  // The output must be valid UTF-8 and match the companion length function.
+  ASSERT_TRUE(simdutf_validate_utf8(out, n));
+  simdutf_result len =
+      simdutf_utf8_length_from_utf16le_with_replacement(input, length);
+  ASSERT_EQUAL(len.count, n);
+}
+
+TEST(convert_utf16be_to_utf8_with_replacement_c) {
+  const char16_t input[] = {to_utf16be(u'A'),
+                            to_utf16be(char16_t(0xD800)),
+                            to_utf16be(u'B'),
+                            to_utf16be(char16_t(0xDC00)),
+                            to_utf16be(char16_t(0xD83D)),
+                            to_utf16be(char16_t(0xDE00))};
+  const size_t length = sizeof(input) / sizeof(input[0]);
+
+  char out[32] = {0};
+  size_t n =
+      simdutf_convert_utf16be_to_utf8_with_replacement(input, length, out);
+  ASSERT_EQUAL(n, size_t(1 + 3 + 1 + 3 + 4));
+  ASSERT_EQUAL(out[0], 'A');
+  ASSERT_TRUE(std::memcmp(out + 1, fffd, 3) == 0);
+  ASSERT_EQUAL(out[4], 'B');
+  ASSERT_TRUE(std::memcmp(out + 5, fffd, 3) == 0);
+  ASSERT_EQUAL(uint8_t(out[8]), uint8_t(0xF0));
+  ASSERT_EQUAL(uint8_t(out[9]), uint8_t(0x9F));
+  ASSERT_EQUAL(uint8_t(out[10]), uint8_t(0x98));
+  ASSERT_EQUAL(uint8_t(out[11]), uint8_t(0x80));
+
+  ASSERT_TRUE(simdutf_validate_utf8(out, n));
+  simdutf_result len =
+      simdutf_utf8_length_from_utf16be_with_replacement(input, length);
+  ASSERT_EQUAL(len.count, n);
+}
+
+TEST(convert_utf16_to_utf8_with_replacement_c) {
+  // Native endianness: agrees with the plain converter on valid input.
+  char16_t valid[5] = {u'h', u'e', u'l', u'l', u'o'};
+  char out[16] = {0};
+  size_t n = simdutf_convert_utf16_to_utf8_with_replacement(valid, 5, out);
+  ASSERT_EQUAL(n, size_t(5));
+  ASSERT_TRUE(std::memcmp(out, "hello", 5) == 0);
+
+  // A lone high surrogate at the end of the input becomes U+FFFD.
+  const char16_t truncated[2] = {u'X', char16_t(0xD800)};
+  char out2[16] = {0};
+  size_t n2 =
+      simdutf_convert_utf16_to_utf8_with_replacement(truncated, 2, out2);
+  ASSERT_EQUAL(n2, size_t(4));
+  ASSERT_EQUAL(out2[0], 'X');
+  ASSERT_TRUE(std::memcmp(out2 + 1, fffd, 3) == 0);
+  ASSERT_TRUE(simdutf_validate_utf8(out2, n2));
+
+  simdutf_result len =
+      simdutf_utf8_length_from_utf16_with_replacement(truncated, 2);
+  ASSERT_EQUAL(len.count, n2);
+
+  // Empty input writes nothing.
+  ASSERT_EQUAL(simdutf_convert_utf16_to_utf8_with_replacement(nullptr, 0, out),
+               size_t(0));
+}
+
+TEST_MAIN

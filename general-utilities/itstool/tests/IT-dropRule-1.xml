@@ -1,0 +1,12 @@
+<doc xmlns:its="http://www.w3.org/2005/11/its" xmlns:itst="http://itstool.org/extensions/" its:version="1.0">
+ <head>
+  <its:rules version="1.0">
+   <itst:dropRule selector="//blanktag" drop="yes"/>
+  </its:rules>
+ </head>
+ <content>
+  <p><blanktag/>Everything started now.</p>
+  <p itst:drop="yes">This is dropped.</p>
+  <blanktag>This is also dropped.</blanktag>
+ </content>
+</doc>

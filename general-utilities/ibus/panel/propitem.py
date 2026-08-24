@@ -1,0 +1,62 @@
+# vim:set et sts=4 sw=4:
+#
+# ibus - The Input Bus
+#
+# Copyright (c) 2007-2008 Huang Peng <shawn.p.huang@gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+# Boston, MA  02111-1307  USA
+
+class PropItem:
+    def __init__ (self, prop):
+        self._prop = prop
+        self._sub_items = []
+
+    def update_property (self, prop):
+        if self._prop == None:
+            return False
+
+        retval = False
+
+        if self._prop.name == prop.name and self._prop.type == prop.type:
+            self._prop = prop
+            self.property_changed ()
+            retval =  True
+
+        if any (map (lambda i: i.update_property (prop), self._sub_items)):
+            retval = True
+
+        return retval
+
+    def set_prop_label (self, label):
+        self._prop.label = label
+        self.property_changed ()
+
+    def set_icon (self, icon):
+        self._prop.icon = icon
+        self.property_changed ()
+
+    def set_tooltip (self, tooltip):
+        self._prop.tooltip = tooltip
+        self.property_changed ()
+
+    def set_state (self, state):
+        self._prop.state = state
+        self.property_changed ()
+
+    def property_changed (self):
+        pass
+
+

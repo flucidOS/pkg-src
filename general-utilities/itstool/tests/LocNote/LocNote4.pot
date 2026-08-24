@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2012-05-04 13:31-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. (itstool) path: span/span
+#. (itstool) link: http://en.wikipedia.org/wiki/Doppelganger
+#: tests/LocNote/LocNote4.xml:5
+msgid "doppelgänger"
+msgstr ""
+
+#. (itstool) path: span/b
+#. If possible keep the non-English terms in the translated version too
+#: tests/LocNote/LocNote4.xml:6
+msgid "serious"
+msgstr ""
+
+#. (itstool) path: span/span
+#. (itstool) link: http://en.wikipedia.org/wiki/Aficionado
+#: tests/LocNote/LocNote4.xml:6
+msgid "aficionado"
+msgstr ""
+
+#. (itstool) path: p/span
+#. If possible keep the non-English terms in the translated version too
+#: tests/LocNote/LocNote4.xml:4
+msgid "Everything started when Zebulon discovered that he had a <_:span-1/> who was a <_:b-2/> baseball <_:span-3/>."
+msgstr ""
+
